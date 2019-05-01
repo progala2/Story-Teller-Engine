@@ -8,13 +8,13 @@ Game Begin
         Starting Location = "House"
         Ending Location = "Outside"
 
-    Headers End
+    End
 
     Intro Begin
 
         Text 0 = "This is a Demo game."
 
-    Intro End
+    End
 
     Location Begin
 

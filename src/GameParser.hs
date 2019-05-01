@@ -3,15 +3,37 @@ module GameParser
     ) where
 
 import Text.ParserCombinators.Parsec
+import GameEngine
 
-parseGameFile :: String -> Either ParseError String
+parseGameFile :: String -> Either ParseError GameOptions
 parseGameFile str = parse gameFile "(unknown)" str
 
-gameFile :: CharParser () String
+gameFile :: CharParser () GameOptions
 gameFile = do 
     gameBeginToken
-    str <- manyTill anyChar (try gameEndToken)
-    return str
+    go <- headersSection
+    _ <- manyTill anyChar (try gameEndToken)
+    return go
+
+headersSection :: CharParser () GameOptions
+headersSection = do
+    whiteSpacesAndNl
+    _ <- string "Headers Begin"
+    go <- (:[]) <$> GameName <$> tryOptions "Game Name"
+    _ <- manyTill anyChar (try $ string "End")
+    return go
+      where 
+        tryOptions name = 
+            do 
+                whiteSpacesAndNl
+                _ <- string name
+                whiteSpaces
+                char '='
+                whiteSpaces
+                str <- between (char '"') (char '"') (many (noneOf "\""))
+                whiteSpaces
+                eol'
+                return str
 
 gameBeginToken :: CharParser () ()
 gameBeginToken = do
