@@ -1,0 +1,73 @@
+Game Begin
+
+    Headers Begin
+
+        Game Name = "XXX"
+        Game Version = "1"
+        Player Capacity = 5
+        Starting Location = "House"
+        Ending Location = "Outside"
+
+    Headers End
+
+    Intro Begin
+
+        Text 0 = "This is a Demo game."
+
+    Intro End
+
+    Location Begin
+
+        Id = 1
+        Name = "House"
+        Description 0 = "This is House description."
+        Description 1 Condition Local 0 = "The wooden door are completly destroyed."
+        Travel Locations Begin 
+            "Outside" Begin
+                Can Travel Condition Local 0
+                Cannot Travel Comment = "The wooden door seems to be locked."
+            End 
+            "Basement"
+        End
+        Objects = "Door"
+
+        Actions Begin
+            Action Begin
+                Used Items = "Axe"
+                Used On = "Door"
+                Add Items To Location = "Wood"
+                Comment = "You destroyed the door!"
+                Objects Remove = "Door"
+            Action End
+        Actions End
+
+        Condition 0 Begin
+            Objects Not Exist = "Door"
+        Condition End
+
+    Location End
+
+    Location Begin
+
+        Name = "Basement"
+        Description 0 = "This is Basement description"
+        Description 1 Condition Local 0 = "There is an axe on the floor."
+        Travel Locations = "Outside", "Basement"
+        Items = "Axe"
+
+        Condition 0 Begin
+            Items Location = "Axe"
+        Condition End
+
+    Location End
+
+    Location Begin
+
+        Name = "Outside"
+
+    Location End
+
+    Outro Begin
+        Text 0 = "You win!"
+    Outro End
+Game End
