@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5e9c622dcfce267a3604c3d0619d3803020954e7c359f04cfc70656950d97d16
+-- hash: bf8e72db4c41d91c411fb8d3885f4798e38da886a3d8e2b0a2d6c49ff283da07
 
 name:           Story-Teller-Engine
 version:        0.1.1.0
@@ -36,6 +36,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , parsec
   default-language: Haskell2010
 
@@ -49,6 +50,7 @@ executable Story-Teller-Engine-exe
   build-depends:
       Story-Teller-Engine
     , base >=4.7 && <5
+    , containers
     , parsec
   default-language: Haskell2010
 
@@ -63,5 +65,6 @@ test-suite Story-Teller-Engine-test
   build-depends:
       Story-Teller-Engine
     , base >=4.7 && <5
+    , containers
     , parsec
   default-language: Haskell2010
