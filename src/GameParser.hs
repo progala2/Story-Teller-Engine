@@ -4,59 +4,66 @@ module GameParser
 
 import Text.ParserCombinators.Parsec
 import qualified Data.Set as S
-import GameEngine
+import qualified GameEngine as Ge
 
-parseGameFile :: String -> Either ParseError GameOptions
+parseGameFile :: String -> Either ParseError (Ge.GameOptions, Ge.Location)
 parseGameFile str = parse gameFile "(unknown)" str
 
-gameFile :: CharParser () GameOptions
+gameFile :: CharParser () (Ge.GameOptions, Ge.Location)
 gameFile = do 
     gameBeginToken
     go <- headersSection
-    _ <- many anyChar
-    return go
-
-headersSection :: CharParser () GameOptions
-headersSection = do
     spaces
-    string' "<Headers"
-    go <- S.fromList <$> (manyTill tryOptions (try (spaces *> string "/>")))
-    return go
+    location <- locationSection
+    _ <- many anyChar
+    return (go, location)
+
+headersSection :: CharParser () Ge.GameOptions
+headersSection = do
+    S.fromList <$> section "Headers" tryOptions
       where 
         tryOptions = choice [
-            GameVersion <$> tryOption "Game Version",
-            GameName <$> tryOption "Game Name",
-            PlayerCapacity <$> tryOptionInt "Player Capacity",
-            StartingLocation <$> tryOption "Starting Location",
-            EndingLocation <$> tryOption "Ending Location"
+            Ge.GameVersion <$> tryOption "Game Version",
+            Ge.GameName <$> tryOption "Game Name",
+            Ge.PlayerCapacity <$> tryOptionInt "Player Capacity",
+            Ge.StartingLocation <$> tryOption "Starting Location",
+            Ge.EndingLocation <$> tryOption "Ending Location"
             ] 
         tryOption name = try (readOption name)
         tryOptionInt name = try (readOptionInt name)
-        readName name =  
-            do 
-                spaces
-                string' name
-                whiteSpaces
-                _ <- char '='
-                whiteSpaces
-        readOption name =
-            do 
-                readName name
-                str <- between (char '"') (char '"') (many (noneOf "\""))
-                whiteSpacesAndEol
-                return str
-        readOptionInt name = 
-            do 
-                readName name
-                str <- read <$> (many (alphaNum))
-                whiteSpacesAndEol
-                return str
+        readOption name = do 
+            skipAssignName name
+            str <- between (char '"') (char '"') (many (noneOf "\""))
+            whiteSpacesAndEol
+            return str
+        readOptionInt name = do 
+            skipAssignName name
+            str <- read <$> (many (alphaNum))
+            whiteSpacesAndEol
+            return str
+
+locationSection :: CharParser () Ge.Location
+locationSection = return $ S.fromList $ [Ge.LocName "dd"]
+
+section :: String -> CharParser () a -> CharParser () [a]
+section name parser = do 
+    spaces 
+    string' ("<" ++ name) 
+    (manyTill parser (try (spaces *> string "/>")))
+
+skipAssignName :: String -> CharParser () ()
+skipAssignName name = do 
+    spaces
+    string' name
+    whiteSpaces
+    _ <- char '='
+    whiteSpaces
 
 gameBeginToken :: CharParser () ()
-gameBeginToken = do
+gameBeginToken = 
     spaces 
-    _ <- string "<Game"
-    whiteSpacesAndEol
+    *> string' "<Game"
+    <* whiteSpacesAndEol
 
 eol :: CharParser () String
 eol = try (string "\n\r")

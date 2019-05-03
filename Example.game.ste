@@ -18,7 +18,6 @@
 
     <Location
 
-        Id = 1
         Name = "House"
         Description 0 = "This is House description."
         Description 1 Condition Local 0 = "The wooden door are completly destroyed."
