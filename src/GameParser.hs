@@ -23,27 +23,25 @@ headersSection = do
     S.fromList <$> section "Headers" tryOptions
       where 
         tryOptions = choice [
-            Ge.GameVersion <$> tryOption "Game Version",
-            Ge.GameName <$> tryOption "Game Name",
+            Ge.GameVersion <$> tryReadOption "Game Version",
+            Ge.GameName <$> tryReadOption "Game Name",
             Ge.PlayerCapacity <$> tryOptionInt "Player Capacity",
-            Ge.StartingLocation <$> tryOption "Starting Location",
-            Ge.EndingLocation <$> tryOption "Ending Location"
+            Ge.StartingLocation <$> tryReadOption "Starting Location",
+            Ge.EndingLocation <$> tryReadOption "Ending Location"
             ] 
-        tryOption name = try (readOption name)
         tryOptionInt name = try (readOptionInt name)
-        readOption name = do 
-            skipAssignName name
-            str <- between (char '"') (char '"') (many (noneOf "\""))
-            whiteSpacesAndEol
-            return str
         readOptionInt name = do 
-            skipAssignName name
+            skipOptionName name
             str <- read <$> (many (alphaNum))
             whiteSpacesAndEol
             return str
 
 locationSection :: CharParser () Ge.Location
-locationSection = return $ S.fromList $ [Ge.LocName "dd"]
+locationSection = S.fromList <$> section "Location" tryOptions
+    where 
+        tryOptions = choice [
+            Ge.LocName <$> tryReadOption "Name"
+            ] 
 
 section :: String -> CharParser () a -> CharParser () [a]
 section name parser = do 
@@ -51,13 +49,23 @@ section name parser = do
     string' ("<" ++ name) 
     (manyTill parser (try (spaces *> string "/>")))
 
-skipAssignName :: String -> CharParser () ()
-skipAssignName name = do 
+skipOptionName :: String -> CharParser () ()
+skipOptionName name = do 
     spaces
     string' name
     whiteSpaces
     _ <- char '='
     whiteSpaces
+
+tryReadOption :: String -> CharParser () String
+tryReadOption name = try (readOption name)
+
+readOption :: String -> CharParser () String
+readOption name = do 
+    skipOptionName name
+    str <- between (char '"') (char '"') (many (noneOf "\""))
+    whiteSpacesAndEol
+    return str
 
 gameBeginToken :: CharParser () ()
 gameBeginToken = 
