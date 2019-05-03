@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5edb67a2d5b83122cce50681f3865c6f4363a52dd948e3310dd4038027b28bf7
+-- hash: c9c8e8a960039b6a85ad1d81acec76e74a8ddc8c02986f096978606d04fe391d
 
 name:           Story-Teller-Engine
 version:        0.2.0.0
@@ -28,7 +28,8 @@ source-repository head
 library
   exposed-modules:
       GameEngine
-      GameParser
+      GameParser.Language
+      GameParser.Parser
       MainMenu
   other-modules:
       Paths_Story_Teller_Engine
