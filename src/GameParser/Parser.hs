@@ -46,9 +46,13 @@ locationSection = do
         tryOptions = choice [
             Ge.LocDescList <$> tryReadDescList
             ] 
-        tryReadDescList = M.fromList <$> sectionMany "Descriptions" (sectionWithKey "Description" (do { 
-            text <- readOption "Text"; condType <- option Ge.None (try readCond); 
-            return $ Ge.LocDesc condType text}) (readOptionInt "Order"))
+        tryReadDescList = M.fromList <$> sectionMany "Descriptions" locDescsParser
+        where
+            locDescsParser = sectionWithKey "Description" locDescParser (readOptionInt "Order")
+            locDescParser = do 
+                text <- readOption "Text" 
+                condType <- option Ge.None (try readCond) 
+                return $ Ge.LocDesc condType text
 
 readCond :: CharParser () Ge.CondType
 readCond = do 
