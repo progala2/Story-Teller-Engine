@@ -3,7 +3,7 @@ module GameParser.Parser
     ) where
 
 import Text.ParserCombinators.Parsec
-import qualified Data.Set as S
+import qualified Data.Map.Strict as M
 import qualified GameEngine as Ge
 import GameParser.Language
 import GameParser.Location
@@ -25,14 +25,14 @@ gameFile = do
 
 headersSection :: CharParser () Ge.GameOptions
 headersSection = do
-    S.fromList <$> sectionMany "Headers" tryOptions
+    M.fromList <$> sectionMany "Headers" tryOptions
       where 
         tryOptions = choice [
-            Ge.GameVersion <$> tryReadOption "Game Version",
-            Ge.GameName <$> tryReadOption "Game Name",
-            Ge.PlayerCapacity <$> tryOptionInt "Player Capacity",
-            Ge.StartingLocation <$> tryReadOption "Starting Location",
-            Ge.EndingLocation <$> tryReadOption "Ending Location"
+            (,) Ge.GameVersion . Ge.GameOptionString <$> tryReadOption "Game Version",
+            (,) Ge.GameName . Ge.GameOptionString <$> tryReadOption "Game Name",
+            (,) Ge.PlayerCapacity . Ge.GameOptionInt <$> tryOptionInt "Player Capacity",
+            (,) Ge.StartingLocation . Ge.GameOptionString <$> tryReadOption "Starting Location",
+            (,) Ge.EndingLocation . Ge.GameOptionString <$> tryReadOption "Ending Location"
             ] 
 
 gameBeginToken :: CharParser () ()

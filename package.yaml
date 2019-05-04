@@ -23,6 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - parsec
 - containers
+- mtl
+- ansi-terminal
 
 library:
   source-dirs: src

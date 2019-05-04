@@ -3,9 +3,10 @@ module GameEngine where
 import qualified Data.Set as S
 import qualified Data.Map.Strict as M
 
-data GameOption = GameName String | GameVersion String | PlayerCapacity Int 
-    | StartingLocation String | EndingLocation String deriving(Show)  
-type GameOptions = S.Set GameOption
+data GameOptionType = GameName | GameVersion | PlayerCapacity 
+    | StartingLocation | EndingLocation deriving (Show)
+data GameOption = GameOptionString String | GameOptionInt Int deriving(Show)  
+type GameOptions = M.Map GameOptionType GameOption
 
 data CondType = Local Int | Global Int | None deriving(Show)
 
@@ -24,20 +25,23 @@ data LocationOption = LocDescList (M.Map Int LocDesc) | LocTravelList (M.Map Str
 type Location = S.Set LocationOption
 type Locations = M.Map LocNameStr Location
 
-instance Ord GameOption where
-    GameName _ <= GameName _ = True
-    GameVersion _ <= GameVersion _ = True
-    PlayerCapacity _ <= PlayerCapacity _ = True
-    StartingLocation _ <= StartingLocation _ = True
-    EndingLocation _ <= EndingLocation _ = True
-    _ <= _ = False
+instance Ord GameOptionType where
+    _ <= GameName = True
+    GameName <= _ = False
+    _ <= GameVersion = True
+    GameVersion <= _ = False
+    _ <= PlayerCapacity = True
+    PlayerCapacity <= _ = False
+    _ <= StartingLocation = True
+    StartingLocation <= _ = False
+    EndingLocation <= EndingLocation = True
 
-instance Eq GameOption where
-    GameName _ == GameName _ = True
-    GameVersion _ == GameVersion _ = True
-    PlayerCapacity _ == PlayerCapacity _ = True
-    StartingLocation _ == StartingLocation _ = True
-    EndingLocation _ == EndingLocation _ = True
+instance Eq GameOptionType where
+    GameName == GameName = True
+    GameVersion == GameVersion = True
+    PlayerCapacity == PlayerCapacity = True
+    StartingLocation == StartingLocation = True
+    EndingLocation == EndingLocation = True
     _ == _ = False
 
 instance Eq LocationOption where

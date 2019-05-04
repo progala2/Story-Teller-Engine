@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 24c641e3bcb224116d58ff9d477794a5751c5ea0b18cad91a83a7e6fd52a2012
+-- hash: bbbe4c2a47fbbc45e32a0074527d2af6c4462b8dbbcfb4a8b782382aeaab915d
 
 name:           Story-Teller-Engine
-version:        0.2.0.0
+version:        0.3.0.0
 description:    Please see the README on GitHub at <https://github.com/progala2/Story-Teller-Engine/blob/master/README.md>
 homepage:       https://github.com/progala2/Story-Teller-Engine#readme
 bug-reports:    https://github.com/progala2/Story-Teller-Engine/issues
@@ -27,6 +27,8 @@ source-repository head
 
 library
   exposed-modules:
+      Game.CommandParser
+      Game.Game
       GameEngine
       GameParser.Condition
       GameParser.Language
@@ -38,8 +40,10 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      ansi-terminal
+    , base >=4.7 && <5
     , containers
+    , mtl
     , parsec
   default-language: Haskell2010
 
@@ -52,8 +56,10 @@ executable Story-Teller-Engine-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Story-Teller-Engine
+    , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , mtl
     , parsec
   default-language: Haskell2010
 
@@ -67,7 +73,9 @@ test-suite Story-Teller-Engine-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Story-Teller-Engine
+    , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , mtl
     , parsec
   default-language: Haskell2010
