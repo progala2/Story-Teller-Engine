@@ -12,65 +12,84 @@
 
     <Intro
 
-        Text 0 = "This is a Demo game."
+        Text = "This is a Demo game."
 
     />
+    <Locations
+        <Location
 
-    <Location
-
-        Id = 1
-        Name = "House"
-        Description 0 = "This is House description."
-        Description 1 Condition Local 0 = "The wooden door are completly destroyed."
-        <Travel Locations 
-            <"Outside"
-                Can Travel Condition Local 0
-                Cannot Travel Comment = "The wooden door seems to be locked."
+            Name = "House"
+        
+            <Descriptions
+                <Description
+                    Order = 0
+                    Text = "This is House description."
+                />
+                <Description 
+                    Order = 1 
+                    Text = "The wooden door are completly destroyed."
+                    Condition = Local 0
+                />
             />
-            <"Basement"/>
-        />
-        <Objects
-            "Door"
-        />
+            <Travel Locations 
+                <Travel
+                    Dest = "Outside"
+                    Travel Condition = Local 0
+                    Cannot Travel Comment = "The wooden door seems to be locked."
+                />
+                "Basement"
+            />
+            Objects = "Door"
 
-        <Actions
-            <Action
-                Used Items = "Axe"
-                Used On = "Door"
-                Add Items To Location = "Wood"
-                Comment = "You destroyed the door!"
-                Objects Remove = "Door"
+            <Actions
+                <Action
+                    Used Items = "Axe"
+                    Used On = "Door"
+                    Add Items To Location = "Wood"
+                    Comment = "You destroyed the door!"
+                    Objects Remove = "Door"
+                />
+            />
+            <Conditions
+                <Condition
+                    Id = 0
+                    Objects Not Exist = "Door"
+                />
             />
         />
 
-        <Condition 0
-            Objects Not Exist = "Door"
+        <Location
+
+            Name = "Basement"
+            <Descriptions
+                <Description 
+                    Order = 0 
+                    Text = "This is Basement description"
+                />
+                <Description 
+                    Order = 1 
+                    Text = "There is an axe on the floor."
+                    Condition = Local 0 
+                />
+            />
+            Travel Locations = "Outside" "Basement"
+            Items = "Axe"
+            <Conditions
+                <Condition
+                    Id = 0
+                    Items Location = "Axe"
+                />
+            />
         />
 
-    />
+        <Location
 
-    <Location
+            Name = "Outside"
+            Description = "You are free!"
 
-        Name = "Basement"
-        Description 0 = "This is Basement description"
-        Description 1 Condition Local 0 = "There is an axe on the floor."
-        Travel Locations = "Outside", "Basement"
-        <Items 
-            "Axe"
         />
-        <Condition 0
-            Items Location = "Axe"
-        />
-
     />
-
-    <Location
-
-        Name = "Outside"
-
-    />
-
     <Outro
-        Text 0 = "You win!"
+        Text = "You win!"
     />
 />

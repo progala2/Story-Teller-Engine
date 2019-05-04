@@ -4,7 +4,7 @@ module MainMenu
 where
 --import System.IO.Error
 import System.IO
-import GameParser
+import GameParser.Parser
 
 mainMenu :: IO ()
 mainMenu = do 
