@@ -1,5 +1,7 @@
 # Changelog for Story-Teller-Engine
 
+## 0.3.0.0
+- Parsing Locations finished
 ## 0.2.0.0
 - Change begin and end token to < />
 - Game Options parseable!

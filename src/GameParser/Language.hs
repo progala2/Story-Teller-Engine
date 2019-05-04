@@ -22,6 +22,13 @@ sectionWithKey name parser parserKey = do
 section :: String -> CharParser () a -> CharParser () a
 section name parser = beginToken name *> parser <* endToken
 
+inlineSection :: String -> CharParser () [String]
+inlineSection name = do 
+    skipOptionName name
+    str <- sepBy (between (char '"') (char '"') (many (noneOf "\""))) (char ' ')
+    whiteSpacesAndEol
+    return str
+
 beginToken :: String -> CharParser () ()
 beginToken name = do
     spaces 
@@ -51,15 +58,22 @@ readOption name = do
     whiteSpacesAndEol
     return str
 
+readValueName ::CharParser () String
+readValueName = do 
+    spaces
+    str <- between (char '"') (char '"') (many (noneOf "\""))
+    whiteSpacesAndEol
+    return str
+
 tryOptionInt :: String -> CharParser () Int
 tryOptionInt name = try (readOptionInt name)
 
 readOptionInt :: String -> CharParser () Int
 readOptionInt name = do 
-        skipOptionName name
-        str <- readInt
-        whiteSpacesAndEol
-        return str
+    skipOptionName name
+    str <- readInt
+    whiteSpacesAndEol
+    return str
 
 readInt :: CharParser () Int
 readInt = read <$> (many (alphaNum))
@@ -81,3 +95,6 @@ whiteSpaces :: CharParser () ()
 whiteSpaces = many (oneOf " \t\f\v")  *> return ()
 whiteSpacesAndEol :: CharParser () ()
 whiteSpacesAndEol = whiteSpaces *> eol'
+
+tupple :: a -> b -> (a, b)
+tupple a b = (a, b)

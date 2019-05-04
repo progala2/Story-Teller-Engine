@@ -61,22 +61,25 @@
         <Location
 
             Name = "Basement"
-            <Description 
-                Order = 0 
-                Text = "This is Basement description"
-            />
-            <Description 
-                Order = 1 
-                Condition = Local 0 
-                Text = "There is an axe on the floor."
+            <Descriptions
+                <Description 
+                    Order = 0 
+                    Text = "This is Basement description"
+                />
+                <Description 
+                    Order = 1 
+                    Text = "There is an axe on the floor."
+                    Condition = Local 0 
+                />
             />
             Travel Locations = "Outside" "Basement"
             Items = "Axe"
-            <Condition
-                Id = 0
-                Items Location = "Axe"
+            <Conditions
+                <Condition
+                    Id = 0
+                    Items Location = "Axe"
+                />
             />
-
         />
 
         <Location
