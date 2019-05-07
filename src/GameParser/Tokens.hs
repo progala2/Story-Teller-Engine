@@ -1,4 +1,4 @@
-module GameEngine where
+module GameParser.Tokens where
 
 import qualified Data.Set as S
 import qualified Data.Map.Strict as M

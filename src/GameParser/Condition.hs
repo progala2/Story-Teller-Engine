@@ -1,7 +1,7 @@
 module GameParser.Condition where
 
 import Text.ParserCombinators.Parsec
-import qualified GameEngine as Ge
+import qualified GameParser.Tokens as Ge
 import GameParser.Language
 
 readCond :: CharParser () Ge.CondType

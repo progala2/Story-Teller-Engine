@@ -15,7 +15,8 @@ mainMenu = do
     gameName <- getLine
     h <- openFile (gameName ++ ".game.ste") ReadMode
     str <- hGetContents h
-    either (print) (S.evalStateT runGame . (,)(PlayerStatus "" [])) (parseGameFile str)
+    print $ parseGameFile str
+ --   either (print) (S.evalStateT runGame . (,)(PlayerStatus "" [])) (parseGameFile str)
     hClose h
       ----  where
       --    withFile' fp = withFile fp ReadMode (\h -> Just <$> hGetContents h)

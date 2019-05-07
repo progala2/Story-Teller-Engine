@@ -4,7 +4,7 @@ module GameParser.Parser
 
 import Text.ParserCombinators.Parsec
 import qualified Data.Map.Strict as M
-import qualified GameEngine as Ge
+import qualified GameParser.Tokens as Ge
 import GameParser.Language
 import GameParser.Location
 
