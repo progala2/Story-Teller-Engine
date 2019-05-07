@@ -19,10 +19,12 @@ type ItemsInLocation = [String]
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
 
 type LocNameStr = String
-data LocationOption = LocDescList (M.Map Int LocDesc) | LocTravelList (M.Map String LocTravel) 
-    | LocObjects [String] | LocItems [String] | LocActions [Action] | LocCond (M.Map Int Condition) deriving(Show)
+data LocationOptionType = LocDescList | LocTravelList 
+    | LocObjects | LocItems| LocActions | LocCond deriving (Show)
+data LocationOption = LocDescListV (M.Map Int LocDesc) | LocTravelListV (M.Map String LocTravel) 
+    | LocStrings [String] | LocActionsV [Action] | LocCondV (M.Map Int Condition) deriving(Show)
 
-type Location = S.Set LocationOption
+type Location = M.Map LocationOptionType LocationOption
 type Locations = M.Map LocNameStr Location
 
 instance Ord GameOptionType where
@@ -44,18 +46,23 @@ instance Eq GameOptionType where
     EndingLocation == EndingLocation = True
     _ == _ = False
 
-instance Eq LocationOption where
-    LocDescList _ == LocDescList _ = True
-    LocTravelList _ == LocTravelList _ = True
-    LocObjects _ == LocObjects _  = True
-    LocItems _ == LocItems _ = True
-    LocActions _ == LocActions _ = True
+instance Eq LocationOptionType where
+    LocDescList == LocDescList = True
+    LocTravelList == LocTravelList = True
+    LocObjects == LocObjects = True
+    LocItems == LocItems = True
+    LocActions == LocActions = True
     _ == _ = False
 
-instance Ord LocationOption where
-    LocDescList _ <= LocDescList _ = True
-    LocTravelList _ <= LocTravelList _ = True
-    LocObjects _ <= LocObjects _  = True
-    LocItems _ <= LocItems _ = True
-    LocActions _ <= LocActions _ = True
-    _ <= _ = False
+instance Ord LocationOptionType where
+    _ <= LocDescList = True
+    LocDescList <= _ = False
+    _ <= LocTravelList = True
+    LocTravelList <= _ = False
+    _ <= LocObjects  = True
+    LocObjects <= _  = False
+    _ <= LocItems = True
+    LocItems <= _ = True
+    _ <= LocActions = True
+    LocActions <= _ = True
+    LocCond <= LocCond = True

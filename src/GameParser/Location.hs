@@ -13,15 +13,15 @@ locationsSection = M.fromList <$> sectionMany "Locations" (try locationSection)
 locationSection :: CharParser () (Ge.LocNameStr, Ge.Location)
 locationSection = do 
     (name, set) <- sectionManyWithKey "Location" tryOptions (readOption "Name")
-    return (name, S.fromList set)
+    return (name, M.fromList set)
     where 
         tryOptions = choice [
-            Ge.LocDescList <$> try readDescList,
-            Ge.LocTravelList <$> try readLocTravelList,
-            Ge.LocObjects <$> try (inlineSection "Objects"),
-            Ge.LocItems <$> try (inlineSection "Items"),
-            Ge.LocActions <$> try (readLocActionList),
-            Ge.LocCond <$> try (readLocCondList)
+            (,)Ge.LocDescList . Ge.LocDescListV <$> try readDescList,
+            (,)Ge.LocTravelList .Ge.LocTravelListV <$> try readLocTravelList,
+            (,)Ge.LocObjects . Ge.LocStrings <$> try (inlineSection "Objects"),
+            (,)Ge.LocItems . Ge.LocStrings <$> try (inlineSection "Items"),
+            (,)Ge.LocActions . Ge.LocActionsV <$> try (readLocActionList),
+            (,)Ge.LocCond . Ge.LocCondV <$> try (readLocCondList)
             ] 
         readLocTravelList = M.fromList <$> choice [try (sectionMany "Travel Locations" locTravelsParser),
             ( (`tupple` Ge.LocCanTravel) <$> ) <$> inlineSection "Travel Locations"]

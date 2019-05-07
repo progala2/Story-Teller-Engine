@@ -4,14 +4,14 @@ module GameParser.Parser
 
 import Text.ParserCombinators.Parsec
 import qualified Data.Map.Strict as M
-import qualified GameParser.Tokens as Ge
+import qualified GameParser.Tokens as T
 import GameParser.Language
 import GameParser.Location
 
-parseGameFile :: String -> Either ParseError (Ge.GameOptions, Ge.Locations)
+parseGameFile :: String -> Either ParseError (T.GameOptions, T.Locations)
 parseGameFile str = parse gameFile "(unknown)" str
 
-gameFile :: CharParser () (Ge.GameOptions, Ge.Locations)
+gameFile :: CharParser () (T.GameOptions, T.Locations)
 gameFile = do 
     gameBeginToken
     go <- headersSection
@@ -23,16 +23,16 @@ gameFile = do
     _ <- many anyChar
     return (go, locations)
 
-headersSection :: CharParser () Ge.GameOptions
+headersSection :: CharParser () T.GameOptions
 headersSection = do
     M.fromList <$> sectionMany "Headers" tryOptions
       where 
         tryOptions = choice [
-            (,) Ge.GameVersion . Ge.GameOptionString <$> tryReadOption "Game Version",
-            (,) Ge.GameName . Ge.GameOptionString <$> tryReadOption "Game Name",
-            (,) Ge.PlayerCapacity . Ge.GameOptionInt <$> tryOptionInt "Player Capacity",
-            (,) Ge.StartingLocation . Ge.GameOptionString <$> tryReadOption "Starting Location",
-            (,) Ge.EndingLocation . Ge.GameOptionString <$> tryReadOption "Ending Location"
+            (,) T.GameVersion . T.GameOptionString <$> tryReadOption "Game Version",
+            (,) T.GameName . T.GameOptionString <$> tryReadOption "Game Name",
+            (,) T.PlayerCapacity . T.GameOptionInt <$> tryOptionInt "Player Capacity",
+            (,) T.StartingLocation . T.GameOptionString <$> tryReadOption "Starting Location",
+            (,) T.EndingLocation . T.GameOptionString <$> tryReadOption "Ending Location"
             ] 
 
 gameBeginToken :: CharParser () ()
