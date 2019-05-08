@@ -5,12 +5,13 @@ import qualified Data.Map.Strict as M
 
 
 data CondType = CondLocal | CondGlobal deriving(Show)
-data LocDesc = LocDesc CondType String deriving(Show)
-newtype CondId = CondId Int
+data LocDesc = LocDesc String | LocDescCond CondType CondId String deriving(Show)
+newtype CondId = CondId Int deriving(Show, Eq, Ord)
+newtype DescOrder = DescOrder Int deriving(Show, Eq, Ord)
 newtype ObjectsNotExist = ObjectsNotExist [String] deriving(Show)
 newtype ItemsInLocation = ItemsInLocation [String] deriving(Show)
 
-type Conditions = (M.Map Int Condition)
+type Conditions = (M.Map CondId Condition)
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
 
 data Action = Action [String] String [String] String [String] deriving(Show)
@@ -19,7 +20,7 @@ type Actions = [Action]
 data LocCanTravel = LocCannotTravel CondType String | LocCanTravel deriving(Show)
 newtype LocName = LocName String deriving(Eq, Ord, Show)
 data Location = Location {
-    lcDescList::(M.Map CondId LocDesc), 
+    lcDescList::(M.Map DescOrder LocDesc), 
     lcTravelList::(M.Map LocName LocCanTravel), 
     lcObjects::Objects, 
     lcItems::Items, 

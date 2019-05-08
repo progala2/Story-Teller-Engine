@@ -4,10 +4,10 @@ module MainMenu
 where
 --import System.IO.Error
 import System.IO
-import GameParser.Parser
 import qualified Control.Monad.State.Lazy as S
 import Game.Runner
 import GameParser.Loader
+import GameParser.Parser
 --import Data.Either
 
 mainMenu :: IO ()
@@ -17,7 +17,7 @@ mainMenu = do
     h <- openFile (gameName ++ ".game.ste") ReadMode
     str <- hGetContents h
     print $ parseGameFile str
-    either (print)  (either (print) (S.evalStateT runGame) . parseTokensToGame) (parseGameFile str)
+    either (print) (S.evalStateT runGame) (loadGame str)
     hClose h
       ----  where
       --    withFile' fp = withFile fp ReadMode (\h -> Just <$> hGetContents h)

@@ -9,7 +9,6 @@ import Game.Types
 runGame :: GameStateIO ()
 runGame = do
     S.lift $ clearScreen
-    (_, (opts, loc)) <- S.get
     ss <- S.get
     line <- S.lift $ getLine
     printL $ S.evalState (either (\_ -> return "ss" ) handleCommand (parseCommand line)) ss
