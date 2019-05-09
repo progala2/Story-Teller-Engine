@@ -17,7 +17,7 @@ data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
 data Action = Action [String] String [String] String [String] deriving(Show)
 type Actions = [Action]
 
-data LocCanTravel = LocCannotTravel CondType String | LocCanTravel deriving(Show)
+data LocCanTravel = LocCannotTravel CondType CondId String | LocCanTravel deriving(Show)
 newtype LocName = LocName String deriving(Eq, Ord, Show)
 data Location = Location {
     lcDescList::(M.Map DescOrder LocDesc), 
