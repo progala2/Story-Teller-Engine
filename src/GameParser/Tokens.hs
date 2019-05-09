@@ -12,7 +12,11 @@ data CondType = Local Int | Global Int | None deriving(Show)
 data LocDesc = LocDesc CondType String deriving(Show)
 data LocTravel = LocCannotTravel CondType String | LocCanTravel deriving(Show)
 
-data Action = Action [String] String [String] String [String] deriving(Show)
+type Action = M.Map ActionOptionType ActionOption
+data ActionOptionType = AotType | AotUsedItems | AotUsedOn 
+    | AotAddItemsToLocation | AotComment | AotObjectsRemove deriving(Show, Eq, Ord)
+data ActionOption = AoArrString [String] | AoString String deriving(Show)
+
 type ObjectsNotExist = [String] 
 type ItemsInLocation = [String] 
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)

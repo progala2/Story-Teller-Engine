@@ -41,17 +41,21 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                           (k, (T.LocDesc (T.Global idG) s)) -> (G.DescOrder k, G.LocDescCond G.CondGlobal (G.CondId idG) s);
                           (k, (T.LocDesc (T.None) s)) -> (G.DescOrder k, G.LocDesc s)
                     
-                    locTravelList = case locOpts M.!? T.LocTravelList of Just (T.LocTravelListV mp) -> Right $ mapTravelMap mp; Nothing -> errO T.LocTravelList; _ -> error "This shouldn't happen."
+                    locTravelList = case locOpts M.!? T.LocTravelList of Just (T.LocTravelListV mp) -> Right $ mapTravelMap mp; Nothing -> errO T.LocTravelList; _ -> errCant
                       where
                         mapTravelMap mp = M.fromAscList $ mapTravelPair <$> M.toList mp
                         mapTravelPair x = case x of
                           (k, (T.LocCannotTravel (T.Local idL) s)) -> (G.LocName k, G.LocCannotTravel G.CondLocal (G.CondId idL) s);
                           (k, (T.LocCannotTravel (T.Global idG) s)) -> (G.LocName k, G.LocCannotTravel G.CondGlobal (G.CondId idG) s);
                           (k, (T.LocCanTravel)) -> (G.LocName k, G.LocCanTravel)
-                          (_, T.LocCannotTravel T.None _) -> error "This scenatio can't happen."
+                          (_, T.LocCannotTravel T.None _) -> errCant
 
-                    locObjects = []--case loc M.!? T.LocObjects 
-                    locItems = []--case loc M.!? T.LocItems 
+                    locObjects = case locOpts M.!? T.LocObjects of Just (T.LocStrings mp) -> map object mp; Nothing -> []; _ -> errCant
+                      where
+                        object x = G.Object x
+                    locItems = case locOpts M.!? T.LocItems of Just (T.LocStrings mp) -> map item mp; Nothing -> []; _ -> errCant
+                      where
+                        item x = G.Item x
                     locActions = []--case loc M.!? T.LocActions 
                     locCond = M.empty--case loc M.!? T.LocCond
 
@@ -74,3 +78,6 @@ iGet mp k = case mp M.!? k of Just (T.GameOptionInt str) -> Right str; _ -> errO
 
 errO ::(Show a) => a -> Either LoaderError b
 errO str = Left $ "There is no " ++ (show str) ++ " option."
+
+errCant :: b
+errCant = error "This scenario can't happen."

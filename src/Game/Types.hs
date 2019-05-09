@@ -14,7 +14,8 @@ newtype ItemsInLocation = ItemsInLocation [String] deriving(Show)
 type Conditions = (M.Map CondId Condition)
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
 
-data Action = Action [String] String [String] String [String] deriving(Show)
+data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show)
+data Action = ActionUseItemsOnObject [Item] Object String [ActionResult] deriving(Show)
 type Actions = [Action]
 
 data LocCanTravel = LocCannotTravel CondType CondId String | LocCanTravel deriving(Show)
@@ -29,8 +30,8 @@ data Location = Location {
     } 
 type Locations = M.Map LocName Location
 
-newtype Item = Item String
-newtype Object = Object String
+newtype Item = Item String deriving(Show)
+newtype Object = Object String deriving(Show)
 type Items = [Item]
 type Objects = [Object]
 

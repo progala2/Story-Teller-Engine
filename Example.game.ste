@@ -43,6 +43,7 @@
 
             <Actions
                 <Action
+                    Type = "ItemsOnObject"
                     Used Items = "Axe"
                     Used On = "Door"
                     Add Items To Location = "Wood"
@@ -86,7 +87,7 @@
 
             Name = "Outside"
             Description = "You are free!"
-
+            Travel Locations = "House"
         />
     />
     <Outro

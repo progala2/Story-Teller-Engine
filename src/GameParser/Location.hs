@@ -15,13 +15,13 @@ locationSection = do
     return (name, M.fromList set)
     where 
         tryOptions = choice [
-            (,)Ge.LocDescList . Ge.LocDescListV <$> try readDescList,
-            (,)Ge.LocTravelList .Ge.LocTravelListV <$> try readLocTravelList,
-            (,)Ge.LocObjects . Ge.LocStrings <$> try (inlineSection "Objects"),
-            (,)Ge.LocItems . Ge.LocStrings <$> try (inlineSection "Items"),
-            (,)Ge.LocActions . Ge.LocActionsV <$> try (readLocActionList),
-            (,)Ge.LocCond . Ge.LocCondV <$> try (readLocCondList)
-            ] 
+            tryToTV Ge.LocDescList Ge.LocDescListV readDescList,
+            tryToTV Ge.LocTravelList Ge.LocTravelListV readLocTravelList,
+            tryToTV Ge.LocItems Ge.LocStrings (inlineSection "Items"),
+            tryToTV Ge.LocObjects Ge.LocStrings (inlineSection "Objects"),
+            tryToTV Ge.LocActions Ge.LocActionsV (readLocActionList),
+            tryToTV Ge.LocCond Ge.LocCondV (readLocCondList)
+            ]  <?> "Not acceptable header option."
         readLocTravelList = M.fromList <$> choice [try (sectionMany "Travel Locations" locTravelsParser),
             ( (`tupple` Ge.LocCanTravel) <$> ) <$> inlineSection "Travel Locations"]
           where
@@ -43,14 +43,15 @@ locationSection = do
         
         readLocActionList = sectionMany "Actions" locActionsParser
           where
-            locActionsParser = section "Action" locActionParser
-            locActionParser = do
-                used <- inlineSection "Used Items"
-                usedOn <- readOption "Used On"
-                addItems <- inlineSection "Add Items To Location"
-                comment <- readOption "Comment"
-                objRem <- inlineSection "Objects Remove"
-                return $ Ge.Action used usedOn addItems comment objRem
+            locActionsParser = M.fromList <$> sectionMany "Action" locActionParser
+            locActionParser = choice [
+              tryToTV Ge.AotType Ge.AoString (readOption "Type"),
+              tryToTV Ge.AotUsedItems Ge.AoArrString (inlineSection "Used Items"),
+              tryToTV Ge.AotUsedOn Ge.AoString $ readOption "Used On",
+              tryToTV Ge.AotAddItemsToLocation Ge.AoArrString $ inlineSection "Add Items To Location",
+              tryToTV Ge.AotComment Ge.AoString $ readOption "Comment",
+              tryToTV Ge.AotObjectsRemove Ge.AoArrString $ inlineSection "Objects Remove"
+              ] <?> "Not acceptable action option."
         
         readLocCondList = M.fromList <$> sectionMany "Conditions" locCondsParser
           where
@@ -59,3 +60,6 @@ locationSection = do
                 items <- option [] (try $ inlineSection "Items Location")
                 objRem <- option [] (try $ inlineSection "Objects Not Exist")
                 return $ Ge.Condition objRem items
+
+tryToTV :: a -> (b -> c) -> CharParser () b -> CharParser () (a, c)
+tryToTV t v r = (,)t . v <$> try r
