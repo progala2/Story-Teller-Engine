@@ -1,7 +1,6 @@
 module GameParser.Location ( locationsSection ) where
 
 import Text.ParserCombinators.Parsec
-import qualified Data.Set as S
 import qualified GameParser.Tokens as Ge
 import qualified Data.Map.Strict as M
 import GameParser.Language

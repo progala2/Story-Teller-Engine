@@ -14,7 +14,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
       where
         playerStatus = G.PlayerStatus <$> startingLocation <*> Right []
           where
-            startingLocation = case go M.!? T.StartingLocation of Just(T.GameOptionString str) -> Right $ G.LocName str; _ -> errO T.StartingLocation
+            startingLocation = G.LocName <$> sGet go T.StartingLocation
         
         worldStatus = (,) <$> gameOptions <*> locations
           where
@@ -24,10 +24,10 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                 <*> playerCapacity
                 <*> endingLocation
               where
-                gameName = case go M.!? T.GameName of Just (T.GameOptionString str) -> Right str; _ -> errO T.GameName
-                gameVersion = case go M.!? T.GameVersion of Just (T.GameOptionString str) -> Right str; _ -> errO T.GameVersion
-                playerCapacity =  case go M.!? T.PlayerCapacity of Just(T.GameOptionInt str) -> Right str; _ -> errO T.PlayerCapacity
-                endingLocation = case go M.!? T.EndingLocation of Just(T.GameOptionString str) -> Right str; _ -> errO T.EndingLocation
+                gameName = sGet go T.GameName
+                gameVersion = sGet go T.GameVersion
+                playerCapacity =  iGet go T.PlayerCapacity
+                endingLocation = sGet go T.EndingLocation
             
             locations = M.fromAscList <$> rightsIfAll (location <$> (M.toList locs))
               where
@@ -55,9 +55,6 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                     locActions = []--case loc M.!? T.LocActions 
                     locCond = M.empty--case loc M.!? T.LocCond
 
-errO ::(Show a) => a -> Either LoaderError b
-errO str = Left $ "There is no " ++ (show str) ++ " option."
-
 rightsIfAll :: [Either String b] -> Either String [b]
 rightsIfAll [] = Right []
 rightsIfAll rs = case foldl fldFunc ("", []) rs of
@@ -67,3 +64,13 @@ rightsIfAll rs = case foldl fldFunc ("", []) rs of
     fldFunc (l, t) (Left str) = (l ++ "\n" ++ str, t)
     fldFunc ("", t) (Right elm) = ("", elm:t)
     fldFunc (l, _) (Right _) = (l, [])
+
+
+sGet :: (Ord k, Show k) => M.Map k T.GameOption -> k -> Either LoaderError String
+sGet mp k = case mp M.!? k of Just (T.GameOptionString str) -> Right str; _ -> errO k
+
+iGet :: (Ord k, Show k) => M.Map k T.GameOption -> k -> Either LoaderError Int
+iGet mp k = case mp M.!? k of Just (T.GameOptionInt str) -> Right str; _ -> errO k
+
+errO ::(Show a) => a -> Either LoaderError b
+errO str = Left $ "There is no " ++ (show str) ++ " option."
