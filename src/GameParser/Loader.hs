@@ -1,5 +1,7 @@
 module GameParser.Loader(loadGame) where
 
+import Extensions.Maybe
+import Extensions.Errors
 import qualified Game.Types as G
 import qualified Data.Map.Strict as M
 import qualified GameParser.Tokens as T
@@ -31,7 +33,13 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
             
             locations = M.fromAscList <$> rightsIfAll (location <$> (M.toList locs))
               where
-                location (locK, locOpts) = (,) (G.LocName locK) <$>  (G.Location descList <$> locTravelList <*> Right locObjects <*> Right locItems <*> Right locActions <*> Right locCond)
+                location (locK, locOpts) = (,) (G.LocName locK) 
+                  <$> (G.Location descList 
+                    <$> locTravelList 
+                    <*> Right locObjects 
+                    <*> Right locItems 
+                    <*> locActions 
+                    <*> Right locCond)
                   where
                     descList = case locOpts M.!? T.LocDescList of Just (T.LocDescListV mp) -> mapDescMap mp; Nothing -> M.empty; _ -> error "This shouldn't happen."
                       where
@@ -56,28 +64,23 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                     locItems = case locOpts M.!? T.LocItems of Just (T.LocStrings mp) -> map item mp; Nothing -> []; _ -> errCant
                       where
                         item x = G.Item x
-                    locActions = []--case loc M.!? T.LocActions 
+                    locActions = rightsIfAll $ case locOpts M.!? T.LocActions of Just (T.LocActionsV mp) -> map action mp; Nothing -> []; _ -> errCant--case loc M.!? T.LocActions 
+                      where
+                        action act = G.ActionUseItemsOnObject 
+                          <$> (G.Item <$$> saGet act T.AotUsedItems) 
+                          <*> (G.Object <$> sGet act T.AotUsedOn)
+                          <*> Right ""
+                          <*> Right []
                     locCond = M.empty--case loc M.!? T.LocCond
 
-rightsIfAll :: [Either String b] -> Either String [b]
-rightsIfAll [] = Right []
-rightsIfAll rs = case foldl fldFunc ("", []) rs of
-  ("", table) -> Right table
-  (str, _) -> Left str
-  where
-    fldFunc (l, t) (Left str) = (l ++ "\n" ++ str, t)
-    fldFunc ("", t) (Right elm) = ("", elm:t)
-    fldFunc (l, _) (Right _) = (l, [])
+sGet :: (Ord k, Show k, T.OptionStr o) => M.Map k o -> k -> Either LoaderError String
+sGet mp k = case mp M.!? k of Just o -> Right $ T.getStr o; _ -> errO k
 
+saGet :: (Ord k, Show k, T.OptionArrStr o) => M.Map k o -> k -> Either LoaderError [String]
+saGet mp k = case mp M.!? k of Just o -> Right $ T.getArrStr o; _ -> errO k
 
-sGet :: (Ord k, Show k) => M.Map k T.GameOption -> k -> Either LoaderError String
-sGet mp k = case mp M.!? k of Just (T.GameOptionString str) -> Right str; _ -> errO k
-
-iGet :: (Ord k, Show k) => M.Map k T.GameOption -> k -> Either LoaderError Int
-iGet mp k = case mp M.!? k of Just (T.GameOptionInt str) -> Right str; _ -> errO k
+iGet :: (Ord k, Show k, T.OptionInt o) => M.Map k o -> k -> Either LoaderError Int
+iGet mp k = case mp M.!? k of Just o -> Right $ T.getInt o; _ -> errO k
 
 errO ::(Show a) => a -> Either LoaderError b
 errO str = Left $ "There is no " ++ (show str) ++ " option."
-
-errCant :: b
-errCant = error "This scenario can't happen."

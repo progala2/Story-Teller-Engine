@@ -1,5 +1,6 @@
 module GameParser.Tokens where
 
+import Extensions.Maybe
 import qualified Data.Map.Strict as M
 
 data GameOptionType = GameName | GameVersion | PlayerCapacity 
@@ -31,3 +32,32 @@ type Location = M.Map LocationOptionType LocationOption
 type Locations = M.Map LocNameStr Location
 
 data DataType = IntType | StringType deriving(Show)
+
+class OptionInt a where
+    getIntM :: a -> Maybe Int
+    getInt :: a -> Int
+    getInt = takeJust . getIntM
+    
+class OptionStr a where
+    getStrM :: a -> Maybe String
+    getStr :: a -> String
+    getStr = takeJust . getStrM
+
+class OptionArrStr a where
+    getArrStrM :: a -> Maybe [String]
+    getArrStr :: a -> [String]
+    getArrStr = takeJust . getArrStrM
+
+instance OptionStr GameOption where
+    getStrM (GameOptionString str) = Just str
+    getStrM _ = Nothing
+instance OptionInt GameOption where
+    getIntM (GameOptionInt str) = Just str
+    getIntM _ = Nothing
+    
+instance OptionStr ActionOption where
+    getStrM (AoString str) = Just str
+    getStrM _ = Nothing
+instance OptionArrStr ActionOption where
+    getArrStrM (AoArrString str) = Just str
+    getArrStrM _ = Nothing
