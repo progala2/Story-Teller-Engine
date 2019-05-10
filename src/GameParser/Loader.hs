@@ -4,6 +4,7 @@ import Extensions.Maybe
 import Extensions.Errors
 import qualified Game.Types as G
 import qualified Data.Map.Strict as M
+import qualified Data.Either as E
 import qualified GameParser.Tokens as T
 import GameParser.Parser 
 
@@ -41,7 +42,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                     <*> locActions 
                     <*> Right locCond)
                   where
-                    descList = case locOpts M.!? T.LocDescList of Just (T.LocDescListV mp) -> mapDescMap mp; Nothing -> M.empty; _ -> error "This shouldn't happen."
+                    descList = case locOpts M.!? T.LocDescList of Just (T.LocDescListV mp) -> mapDescMap mp; Nothing -> M.empty; _ -> errCant
                       where
                         mapDescMap mp = M.fromAscList $ mapDescPair <$> M.toList mp
                         mapDescPair x = case x of 
@@ -58,13 +59,9 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                           (k, (T.LocCanTravel)) -> (G.LocName k, G.LocCanTravel)
                           (_, T.LocCannotTravel T.None _) -> errCant
 
-                    locObjects = case locOpts M.!? T.LocObjects of Just (T.LocStrings mp) -> map object mp; Nothing -> []; _ -> errCant
-                      where
-                        object x = G.Object x
-                    locItems = case locOpts M.!? T.LocItems of Just (T.LocStrings mp) -> map item mp; Nothing -> []; _ -> errCant
-                      where
-                        item x = G.Item x
-                    locActions = rightsIfAll $ case locOpts M.!? T.LocActions of Just (T.LocActionsV mp) -> map action mp; Nothing -> []; _ -> errCant--case loc M.!? T.LocActions 
+                    locObjects = G.Object <$> (E.fromRight [] $ saGet locOpts T.LocObjects)
+                    locItems = G.Item <$> (E.fromRight [] $ saGet locOpts T.LocItems)
+                    locActions = rightsIfAll $ case locOpts M.!? T.LocActions of Just (T.LocActionsV mp) -> map action mp; Nothing -> []; _ -> errCant 
                       where
                         action act = G.ActionUseItemsOnObject 
                           <$> (G.Item <$$> saGet act T.AotUsedItems) 

@@ -61,3 +61,7 @@ instance OptionStr ActionOption where
 instance OptionArrStr ActionOption where
     getArrStrM (AoArrString str) = Just str
     getArrStrM _ = Nothing
+
+instance OptionArrStr LocationOption where
+    getArrStrM (LocStrings str) = Just str
+    getArrStrM _ = Nothing
