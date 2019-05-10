@@ -1,4 +1,4 @@
-module Extensions.Maybe where
+module Extensions.Monad where
 
 import Extensions.Errors
 

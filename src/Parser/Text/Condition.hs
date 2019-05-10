@@ -1,8 +1,8 @@
-module GameParser.Condition where
+module Parser.Text.Condition where
 
 import Text.ParserCombinators.Parsec
-import qualified GameParser.Tokens as Ge
-import GameParser.Language
+import qualified Parser.Text.Tokens as Ge
+import Parser.Text.Language
 
 readCond :: CharParser () Ge.CondType
 readCond = readCondN "Condition"

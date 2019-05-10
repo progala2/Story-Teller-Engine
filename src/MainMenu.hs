@@ -6,8 +6,8 @@ where
 import System.IO
 import qualified Control.Monad.State.Lazy as S
 import Game.Runner
-import GameParser.Loader
-import GameParser.Parser
+import Parser.Loader
+import Parser.Text.Parser
 --import Data.Either
 
 mainMenu :: IO ()

@@ -1,10 +1,10 @@
-module GameParser.Location ( locationsSection ) where
+module Parser.Text.Location ( locationsSection ) where
 
 import Text.ParserCombinators.Parsec
-import qualified GameParser.Tokens as Ge
+import qualified Parser.Text.Tokens as Ge
 import qualified Data.Map.Strict as M
-import GameParser.Language
-import GameParser.Condition
+import Parser.Text.Language
+import Parser.Text.Condition
 
 locationsSection :: CharParser () Ge.Locations
 locationsSection = M.fromList <$> sectionMany "Locations" (try locationSection)
@@ -60,6 +60,3 @@ locationSection = do
                 items <- option [] (try $ inlineSection "Items Location")
                 objRem <- option [] (try $ inlineSection "Objects Not Exist")
                 return $ Ge.Condition objRem items
-
-tryToTV :: a -> (b -> c) -> CharParser () b -> CharParser () (a, c)
-tryToTV t v r = (,)t . v <$> try r

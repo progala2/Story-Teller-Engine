@@ -1,4 +1,4 @@
-module GameParser.Language where
+module Parser.Text.Language where
 
 import Text.ParserCombinators.Parsec
 
@@ -98,3 +98,10 @@ whiteSpacesAndEol = whiteSpaces *> eol'
 
 tupple :: a -> b -> (a, b)
 tupple a b = (a, b)
+
+tryToTV :: a -> (b -> c) -> CharParser () b -> CharParser () (a, c)
+tryToTV t v r = (,)t . v <$> try r
+
+choiceToTV :: [(a, CharParser () c)] -> CharParser () (a, c)
+choiceToTV [] = error "Can't be empty!"
+choiceToTV xs = choice $ (\ (a, p) -> tryToTV a id p) <$> xs

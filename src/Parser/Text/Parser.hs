@@ -1,12 +1,12 @@
-module GameParser.Parser
+module Parser.Text.Parser
     ( parseGameFile
     ) where
 
 import Text.ParserCombinators.Parsec
 import qualified Data.Map.Strict as M
-import qualified GameParser.Tokens as T
-import GameParser.Language
-import GameParser.Location
+import qualified Parser.Text.Tokens as T
+import Parser.Text.Language
+import Parser.Text.Location
 
 parseGameFile :: String -> Either ParseError (T.GameOptions, T.Locations)
 parseGameFile str = parse gameFile "(unknown)" str
@@ -27,13 +27,13 @@ headersSection :: CharParser () T.GameOptions
 headersSection = do
     M.fromList <$> sectionMany "Headers" tryOptions
       where 
-        tryOptions = choice [
-            (,) T.GameVersion . T.GameOptionString <$> tryReadOption "Game Version",
-            (,) T.GameName . T.GameOptionString <$> tryReadOption "Game Name",
-            (,) T.PlayerCapacity . T.GameOptionInt <$> tryOptionInt "Player Capacity",
-            (,) T.StartingLocation . T.GameOptionString <$> tryReadOption "Starting Location",
-            (,) T.EndingLocation . T.GameOptionString <$> tryReadOption "Ending Location"
-            ] 
+        tryOptions = choiceToTV [
+             (T.GameVersion, T.GameOptionString <$> readOption "Game Version")
+             (T.GameName, T.GameOptionString <$> readOption "Game Name"),
+             (T.PlayerCapacity, T.GameOptionInt <$> readOptionInt "Player Capacity"),
+             (T.StartingLocation, T.GameOptionString <$> readOption "Starting Location"),
+             (T.EndingLocation, T.GameOptionString <$> readOption "Ending Location")
+             ] 
 
 gameBeginToken :: CharParser () ()
 gameBeginToken = 
