@@ -8,6 +8,8 @@ import qualified Data.Either as E
 import qualified Parser.Text.Tokens as T
 import Parser.Text.Parser 
 import qualified Parser.Text.Option as T
+import Parser.Game.Location.Action
+import Parser.Game.Location.Travel
 import Parser.Errors
 
 loadGame::String -> Either LoaderError G.GameStatus
@@ -53,13 +55,8 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                     
                     locTravelList = T.tGet locOpts T.LocTravelList mapTravelMap
                       where
-                        mapTravelMap (T.LocTravelListV mp) = M.fromAscList $ mapTravelPair <$> M.toList mp
+                        mapTravelMap (T.LocTravelListV mp) = M.fromAscList $ travel <$> M.toList mp
                         mapTravelMap _ = errCant
-                        mapTravelPair x = case x of
-                          (k, (T.LocCannotTravel (T.Local idL) s)) -> (G.LocName k, G.LocCannotTravel G.CondLocal (G.CondId idL) s);
-                          (k, (T.LocCannotTravel (T.Global idG) s)) -> (G.LocName k, G.LocCannotTravel G.CondGlobal (G.CondId idG) s);
-                          (k, (T.LocCanTravel)) -> (G.LocName k, G.LocCanTravel)
-                          (_, T.LocCannotTravel T.None _) -> errCant
 
                     locObjects = G.Object <$> (E.fromRight [] $ T.saGet locOpts T.LocObjects)
                     locItems = G.Item <$> (E.fromRight [] $ T.saGet locOpts T.LocItems)
@@ -67,9 +64,4 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                       where
                         actions (T.LocActionsV act) = map action act 
                         actions _ = errCant
-                        action act = G.ActionUseItemsOnObject 
-                          <$> (G.Item <$$> T.saGet act T.AotUsedItems) 
-                          <*> (G.Object <$> T.sGet act T.AotUsedOn)
-                          <*> Right ""
-                          <*> Right []
                     locCond = M.empty--case loc M.!? T.LocCond

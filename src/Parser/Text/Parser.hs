@@ -28,7 +28,7 @@ headersSection = do
     M.fromList <$> sectionMany "Headers" tryOptions
       where 
         tryOptions = choiceToTV [
-             (T.GameVersion, T.GameOptionString <$> readOption "Game Version")
+             (T.GameVersion, T.GameOptionString <$> readOption "Game Version"),
              (T.GameName, T.GameOptionString <$> readOption "Game Name"),
              (T.PlayerCapacity, T.GameOptionInt <$> readOptionInt "Player Capacity"),
              (T.StartingLocation, T.GameOptionString <$> readOption "Starting Location"),
