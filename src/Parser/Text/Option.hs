@@ -3,6 +3,7 @@ module Parser.Text.Option where
 import Parser.Errors
 import Data.Map.Strict
 import Extensions.Monad
+import Data.Either
 
 class OptionInt a where
     getIntM :: a -> Maybe Int
@@ -31,6 +32,9 @@ iGet mp k = tGet mp k getInt
 
 tGet :: (Ord k, Show k) => Map k o -> k -> (o -> b) -> Either LoaderError b
 tGet mp k func = case mp !? k of Just o -> Right $ func o; _ -> errO k
+
+saGetD :: (Ord k, Show k, OptionArrStr o) => Map k o -> k -> (String -> b) -> [b]
+saGetD mp k func = func <$> (fromRight [] $ saGet mp k)
 
 errO ::(Show a) => a -> Either LoaderError b
 errO str = Left $ "There is no " ++ (show str) ++ " option."

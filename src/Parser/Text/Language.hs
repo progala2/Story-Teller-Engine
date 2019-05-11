@@ -99,9 +99,9 @@ whiteSpacesAndEol = whiteSpaces *> eol'
 tupple :: a -> b -> (a, b)
 tupple a b = (a, b)
 
-tryToTV :: a -> (b -> c) -> CharParser () b -> CharParser () (a, c)
-tryToTV t v r = (,)t . v <$> try r
+tryToTV :: (b -> c) -> a -> CharParser () b -> CharParser () (a, c)
+tryToTV v t r = (,)t . v <$> try r
 
 choiceToTV :: [(a, CharParser () c)] -> CharParser () (a, c)
 choiceToTV [] = error "Can't be empty!"
-choiceToTV xs = choice $ (\ (a, p) -> tryToTV a id p) <$> xs
+choiceToTV xs = choice $ (uncurry (tryToTV id)) <$> xs

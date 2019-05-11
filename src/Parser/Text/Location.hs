@@ -14,13 +14,13 @@ locationSection = do
     (name, set) <- sectionManyWithKey "Location" tryOptions (readOption "Name")
     return (name, M.fromList set)
     where 
-        tryOptions = choice [
-            tryToTV Ge.LocDescList Ge.LocDescListV readDescList,
-            tryToTV Ge.LocTravelList Ge.LocTravelListV readLocTravelList,
-            tryToTV Ge.LocItems Ge.LocStrings (inlineSection "Items"),
-            tryToTV Ge.LocObjects Ge.LocStrings (inlineSection "Objects"),
-            tryToTV Ge.LocActions Ge.LocActionsV (readLocActionList),
-            tryToTV Ge.LocCond Ge.LocCondV (readLocCondList)
+        tryOptions = choiceToTV [
+            (Ge.LocDescList, Ge.LocDescListV <$> readDescList),
+            (Ge.LocTravelList, Ge.LocTravelListV <$> readLocTravelList),
+            (Ge.LocItems, Ge.LocStrings <$> (inlineSection "Items")),
+            (Ge.LocObjects, Ge.LocStrings <$> (inlineSection "Objects")),
+            (Ge.LocActions, Ge.LocActionsV <$> (readLocActionList)),
+            (Ge.LocCond, Ge.LocCondV <$> (readLocCondList))
             ]  <?> "Not acceptable header option."
         readLocTravelList = M.fromList <$> choice [try (sectionMany "Travel Locations" locTravelsParser),
             ( (`tupple` Ge.LocCanTravel) <$> ) <$> inlineSection "Travel Locations"]
@@ -44,13 +44,13 @@ locationSection = do
         readLocActionList = sectionMany "Actions" locActionsParser
           where
             locActionsParser = M.fromList <$> sectionMany "Action" locActionParser
-            locActionParser = choice [
-              tryToTV Ge.AotType Ge.AoString (readOption "Type"),
-              tryToTV Ge.AotUsedItems Ge.AoArrString (inlineSection "Used Items"),
-              tryToTV Ge.AotUsedOn Ge.AoString $ readOption "Used On",
-              tryToTV Ge.AotAddItemsToLocation Ge.AoArrString $ inlineSection "Add Items To Location",
-              tryToTV Ge.AotComment Ge.AoString $ readOption "Comment",
-              tryToTV Ge.AotObjectsRemove Ge.AoArrString $ inlineSection "Objects Remove"
+            locActionParser = choiceToTV [
+              (Ge.AotType, Ge.AoString <$> (readOption "Type")),
+              (Ge.AotUsedItems, Ge.AoArrString <$> (inlineSection "Used Items")),
+              (Ge.AotUsedOn, Ge.AoString <$> (readOption "Used On")),
+              (Ge.AotAddItemsToLocation, Ge.AoArrString <$> (inlineSection "Add Items To Location")),
+              (Ge.AotComment, Ge.AoString <$> (readOption "Comment")),
+              (Ge.AotObjectsRemove, Ge.AoArrString <$> (inlineSection "Objects Remove"))
               ] <?> "Not acceptable action option."
         
         readLocCondList = M.fromList <$> sectionMany "Conditions" locCondsParser

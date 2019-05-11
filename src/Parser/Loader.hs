@@ -58,8 +58,8 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                         mapTravelMap (T.LocTravelListV mp) = M.fromAscList $ travel <$> M.toList mp
                         mapTravelMap _ = errCant
 
-                    locObjects = G.Object <$> (E.fromRight [] $ T.saGet locOpts T.LocObjects)
-                    locItems = G.Item <$> (E.fromRight [] $ T.saGet locOpts T.LocItems)
+                    locObjects = T.saGetD locOpts T.LocObjects G.Object
+                    locItems = T.saGetD locOpts T.LocItems G.Item
                     locActions = rightsIfAll $ E.fromRight [] $ T.tGet locOpts T.LocActions actions 
                       where
                         actions (T.LocActionsV act) = map action act 
