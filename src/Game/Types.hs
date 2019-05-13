@@ -15,7 +15,20 @@ type Conditions = (M.Map CondId Condition)
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
 
 data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show)
-data Action = ActionUseItemsOnObject [Item] Object String [ActionResult] deriving(Show)
+data Action = 
+  ActionUseItemsOnObject { 
+    auiooItemsUsed::[Item],
+    aObject::Object, 
+    aComment::String,
+    aResults::[ActionResult]
+  } 
+  | 
+  ActionUnique {
+    auCommands::[String],
+    aObjectM::Maybe Object
+    aComment::String,
+    aResults::[ActionResult]
+  } deriving(Show)
 type Actions = [Action]
 
 data LocCanTravel = LocCannotTravel CondType CondId String | LocCanTravel deriving(Show)

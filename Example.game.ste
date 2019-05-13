@@ -50,6 +50,12 @@
                     Comment = "You destroyed the door!"
                     Objects Remove = "Door"
                 />
+                <Action
+                    Type = "Unique"
+                    Commands = "Kick"
+                    Used On = "Door"
+                    Comment = "Door is solid, your legs are weak... Nothing happens." 
+                />
             />
             <Conditions
                 <Condition
@@ -75,6 +81,13 @@
             />
             Travel Locations = "Outside" "Basement"
             Items = "Axe"
+            <Actions
+                <Action
+                    Type = "Unique"
+                    Commands = "Clean" "Tidy"
+                    Comment = "Your basement is shining!" 
+                />
+            />
             <Conditions
                 <Condition
                     Id = 0

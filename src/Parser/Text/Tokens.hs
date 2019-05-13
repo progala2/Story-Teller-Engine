@@ -15,7 +15,8 @@ data LocTravel = LocCannotTravel CondType String | LocCanTravel deriving(Show)
 
 type Action = M.Map ActionOptionType ActionOption
 data ActionOptionType = AotType | AotUsedItems | AotUsedOn 
-    | AotAddItemsToLocation | AotComment | AotObjectsRemove deriving(Show, Eq, Ord)
+    | AotAddItemsToLocation | AotComment | AotObjectsRemove 
+    | AotCommands deriving(Show, Eq, Ord)
 data ActionOption = AoArrString [String] | AoString String deriving(Show)
 
 type ObjectsNotExist = [String] 

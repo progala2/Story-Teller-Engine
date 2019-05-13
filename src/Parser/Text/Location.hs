@@ -50,7 +50,8 @@ locationSection = do
               (Ge.AotUsedOn, Ge.AoString <$> (readOption "Used On")),
               (Ge.AotAddItemsToLocation, Ge.AoArrString <$> (inlineSection "Add Items To Location")),
               (Ge.AotComment, Ge.AoString <$> (readOption "Comment")),
-              (Ge.AotObjectsRemove, Ge.AoArrString <$> (inlineSection "Objects Remove"))
+              (Ge.AotObjectsRemove, Ge.AoArrString <$> (inlineSection "Objects Remove")),
+              (Ge.AotCommands, Ge.AoArrString <$> (inlineSection "Commands"))
               ] <?> "Not acceptable action option."
         
         readLocCondList = M.fromList <$> sectionMany "Conditions" locCondsParser
