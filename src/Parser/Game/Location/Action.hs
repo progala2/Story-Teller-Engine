@@ -2,6 +2,7 @@ module Parser.Game.Location.Action where
 
 import Parser.Errors
 import Extensions.Monad
+import Data.Either
 import qualified Game.Types as G
 import qualified Parser.Text.Tokens as T
 import qualified Parser.Text.Option as T
@@ -20,6 +21,9 @@ action act = case T.sGet act T.AotType of
         <*> Right results
       unique = G.ActionUnique
         <$> (T.saGet act T.AotCommands)
+        <*> Right (fromRight Nothing (Just . G.Object <$> T.sGet act T.AotUsedOn))
+        <*> T.sGet act T.AotComment
+        <*> Right results
       results = 
         (G.ArAddLocationItems (T.saGetD act T.AotAddItemsToLocation G.Item))
         : (G.ArRemoveObjects (T.saGetD act T.AotObjectsRemove G.Object))

@@ -34,7 +34,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                 playerCapacity =  T.iGet go T.PlayerCapacity
                 endingLocation = T.sGet go T.EndingLocation
             
-            locations = M.fromAscList <$> rightsIfAll (location <$> (M.toList locs))
+            locations = M.fromList <$> rightsIfAll (location <$> (M.toList locs))
               where
                 location (locK, locOpts) = (,) (G.LocName locK) 
                   <$> (G.Location descList 
@@ -46,7 +46,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                   where
                     descList = E.fromRight M.empty $ T.tGet locOpts T.LocDescList mapDescMap
                       where
-                        mapDescMap (T.LocDescListV mp) = M.fromAscList $ mapDescPair <$> M.toList mp
+                        mapDescMap (T.LocDescListV mp) = M.fromList $ mapDescPair <$> M.toList mp
                         mapDescMap _ = errCant
                         mapDescPair x = case x of 
                           (k, (T.LocDesc (T.Local idL) s)) -> (G.DescOrder k, G.LocDescCond G.CondLocal (G.CondId idL) s);

@@ -25,6 +25,7 @@ handleCommand (Travel dest) = do
                 Just _ -> do
                     S.put (PlayerStatus dest items, (opts, lc))
                     return $ "You travel to: " ++ (show dest)
-                Nothing -> return "There is no destination like that..."
+                Nothing -> return $ "There is no "++ (show dest) ++ "..." ++(show $ ((== dest) <$> M.keys lc))
+handleCommand (ItemsOnObject items obj) = return $ "Not yet implemented" ++ (show items) ++ (show obj)
 printL :: (Show a) => a -> GameStateIO ()
 printL str = S.lift $ print str

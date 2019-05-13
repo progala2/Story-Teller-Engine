@@ -25,7 +25,7 @@ data Action =
   | 
   ActionUnique {
     auCommands::[String],
-    aObjectM::Maybe Object
+    aObjectM::Maybe Object,
     aComment::String,
     aResults::[ActionResult]
   } deriving(Show)
@@ -40,7 +40,7 @@ data Location = Location {
     lcItems::Items, 
     lcActions::Actions,
     lcConditions::Conditions
-    } 
+    } deriving(Show)
 type Locations = M.Map LocName Location
 
 newtype Item = Item String deriving(Show)
@@ -48,13 +48,13 @@ newtype Object = Object String deriving(Show)
 type Items = [Item]
 type Objects = [Object]
 
-data PlayerStatus = PlayerStatus LocName Items
+data PlayerStatus = PlayerStatus LocName Items deriving(Show)
 data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 
     goPlayerCapacity::Int,
     goEndingLocation::String
-    }
+    } deriving(Show)
 type WorldStatus = (GameOptions, Locations)
 type GameStatus = (PlayerStatus, WorldStatus)
 
