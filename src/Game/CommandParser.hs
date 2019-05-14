@@ -1,6 +1,6 @@
 module Game.CommandParser(parseCommand, Command (..)) where
 
-import Text.ParserCombinators.Parsec
+import Extensions.Parsec
 import qualified Game.Types as G
 import Extensions.Monad
 
@@ -16,7 +16,7 @@ command = choice [
     ]
   where
     itemsOnObject = (,) 
-      <$> (G.Item <$$> (itemsOnObjectS *> manyTill (many letter <* (string " ")) (string "on ")))
+      <$> (G.Item <$$> (itemsOnObjectS *> manyTill1 (many letter <* (string " ")) (string "on ")))
       <*> (G.Object <$> many letter)
 gotoS :: CharParser () String
 gotoS = choiceString ["go to ", "Go to ", "travel to ", "move to "]
