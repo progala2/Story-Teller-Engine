@@ -2,14 +2,15 @@ module Game.Types where
 
 import qualified Control.Monad.State.Lazy as S
 import qualified Data.Map.Strict as M
+import qualified Data.Set as Set
 
 
 data CondType = CondLocal | CondGlobal deriving(Show)
 data LocDesc = LocDesc String | LocDescCond CondType CondId String deriving(Show)
 newtype CondId = CondId Int deriving(Show, Eq, Ord)
 newtype DescOrder = DescOrder Int deriving(Show, Eq, Ord)
-newtype ObjectsNotExist = ObjectsNotExist [String] deriving(Show)
-newtype ItemsInLocation = ItemsInLocation [String] deriving(Show)
+newtype ObjectsNotExist = ObjectsNotExist [Object] deriving(Show)
+newtype ItemsInLocation = ItemsInLocation [Item] deriving(Show)
 
 type Conditions = (M.Map CondId Condition)
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
@@ -36,19 +37,19 @@ newtype LocName = LocName String deriving(Eq, Ord, Show)
 data Location = Location {
     lcDescList::(M.Map DescOrder LocDesc), 
     lcTravelList::(M.Map LocName LocCanTravel), 
-    lcObjects::Objects, 
-    lcItems::Items, 
+    lcObjects::ObjectSet, 
+    lcItems::ItemSet, 
     lcActions::Actions,
     lcConditions::Conditions
     } deriving(Show)
 type Locations = M.Map LocName Location
 
-newtype Item = Item String deriving(Show)
-newtype Object = Object String deriving(Show)
-type Items = [Item]
-type Objects = [Object]
+newtype Item = Item String deriving(Eq, Ord, Show)
+newtype Object = Object String deriving(Eq, Ord, Show)
+type ItemSet = Set.Set Item
+type ObjectSet = Set.Set Object
 
-data PlayerStatus = PlayerStatus LocName Items deriving(Show)
+data PlayerStatus = PlayerStatus LocName ItemSet deriving(Show)
 data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 
