@@ -27,14 +27,24 @@ runGame = gameLoop "New Game has been started!"
 
 handleCommand :: Command -> GameState String
 handleCommand (Travel dest) = do
-    (status, (opts, lc)) <- S.get
-    case status of
-        PlayerStatus _ items ->
-            case lc M.!? dest of
-                Just _ -> do
-                    S.put (PlayerStatus dest items, (opts, lc))
-                    return $ "You travel to: " ++ (show dest)
-                Nothing -> return $ "There is no "++ (show dest) ++ "..." ++(show $ ((== dest) <$> M.keys lc))
+  gs@((PlayerStatus pLocName items), (opts, locations)) <- S.get
+  let currLoc = locations M.! pLocName
+  case locations M.!? dest of
+    Just _ ->
+      case lcTravelList currLoc M.!? dest of
+        Just LocCanTravel -> travel items opts locations
+        Just (LocCannotTravel ct cid str) -> if checkCondition gs currLoc (ct, cid) 
+          then travel items opts locations
+          else return str
+        Nothing -> nothing
+      
+    Nothing -> nothing
+  where
+    nothing = return $ "There is no "++ (show dest) ++ "..."
+    travel :: ItemSet -> GameOptions -> Locations -> GameState String
+    travel items opts lc = do
+      S.put (PlayerStatus dest items, (opts, lc))
+      return $ "You travel to: " ++ (show dest)
 handleCommand (ItemsOnObject items obj) = return $ "Not yet implemented" ++ (show items) ++ (show obj)
 
 showDescription :: GameStatus -> Location -> String
@@ -44,13 +54,14 @@ showDescription gs l = foldl' sepByLn [] $ desc <$> M.elems (lcDescList l)
     desc (LocDescCond ct cid str) = if checkCondition gs l (ct, cid) then str else ""
 
 checkCondition :: GameStatus -> Location -> (CondType, CondId) -> Bool
-checkCondition (_, _) loc (CondLocal, cid) = condition $ lcCondition loc cid
+checkCondition (_, _) loc (ct, cid) = case ct of
+  CondLocal -> condition $ lcCondition loc cid
+  CondGlobal -> False
   where 
     condition (Condition objs items) = not (any objCond objs) && all itemCond items
       where 
         objCond obj = Set.member obj (lcObjects loc)
         itemCond item = Set.member item (lcItems loc)
-checkCondition _ _ (CondGlobal, _) = False
 
 -- printL :: (Show a) => a -> GameStateIO ()
 -- printL str = S.lift $ print str

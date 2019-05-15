@@ -79,7 +79,7 @@
                     Condition = Local 0 
                 />
             />
-            Travel Locations = "Outside" "Basement"
+            Travel Locations = "Basement"
             Items = "Axe"
             <Actions
                 <Action
