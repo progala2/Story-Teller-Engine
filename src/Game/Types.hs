@@ -9,8 +9,8 @@ data CondType = CondLocal | CondGlobal deriving(Show)
 data LocDesc = LocDesc String | LocDescCond CondType CondId String deriving(Show)
 newtype CondId = CondId Int deriving(Show, Eq, Ord)
 newtype DescOrder = DescOrder Int deriving(Show, Eq, Ord)
-newtype ObjectsNotExist = ObjectsNotExist [Object] deriving(Show)
-newtype ItemsInLocation = ItemsInLocation [Item] deriving(Show)
+type ObjectsNotExist = [Object]
+type ItemsInLocation = [Item]
 
 type Conditions = (M.Map CondId Condition)
 data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
@@ -43,6 +43,9 @@ data Location = Location {
     lcConditions::Conditions
     } deriving(Show)
 type Locations = M.Map LocName Location
+
+lcCondition :: Location -> CondId -> Condition
+lcCondition l cid = lcConditions l M.! cid
 
 newtype Item = Item String deriving(Eq, Ord, Show)
 newtype Object = Object String deriving(Eq, Ord, Show)
