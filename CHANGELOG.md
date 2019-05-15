@@ -1,5 +1,7 @@
 # Changelog for Story-Teller-Engine
 
+## 0.4.2.0
+- travel logic
 ## 0.4.1.0
 - some first simple game logic
 ## 0.4.0.0
