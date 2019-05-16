@@ -14,16 +14,15 @@ runGame = gameLoop "New Game has been started!"
       where
         currLoc ((PlayerStatus cL _), (_, locs)) = locs M.! cL
         gameLoop str = do 
-          S.lift $ clearScreen
           putStrLnL str
           ss@((PlayerStatus (LocName loc) _), _) <- S.get
           putStrLnL $ "Location: " ++ loc
           putStrLnL $ showDescription ss (currLoc ss)
           putStrLnL "What now? : "
           line <- S.lift $ getLine
+          S.lift $ clearScreen
           res <- raiseStateToT (either (\_ -> return "You wrote something really wrong!") handleCommand (parseCommand line)) 
           gameLoop res
-          --rdHp opts k = case opts M.! k of Ge.GameOptionString str -> str; _ -> error "Unexpected error"
 
 handleCommand :: Command -> GameState String
 handleCommand (Travel dest) = do
@@ -40,12 +39,15 @@ handleCommand (Travel dest) = do
       
     Nothing -> nothing
   where
-    nothing = return $ "There is no "++ (show dest) ++ "..."
+    nothing = return $ "There is no " ++ (show dest) ++ "..."
     travel :: ItemSet -> GameOptions -> Locations -> GameState String
     travel items opts lc = do
       S.put (PlayerStatus dest items, (opts, lc))
       return $ "You travel to: " ++ (show dest)
 handleCommand (ItemsOnObject items obj) = return $ "Not yet implemented" ++ (show items) ++ (show obj)
+handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl' sepByLn [] (show <$> Set.toList items))
+handleCommand (PickUpItem _) = return $ "Not yet implemented"
+handleCommand (ThrowItem _) = return $ "Not yet implemented"
 
 showDescription :: GameStatus -> Location -> String
 showDescription gs l = foldl' sepByLn [] $ desc <$> M.elems (lcDescList l)

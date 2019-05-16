@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7f893a5ea1a674a9c62b91e0a1cc522967643247503ae30d0b2992b03931578b
+-- hash: 5963630fa46cc62233aeade71d56af5d5fd4492b2eaf743df1f956e2a4a10c4c
 
 name:           Story-Teller-Engine
-version:        0.4.2.0
+version:        0.4.3.0
 description:    Please see the README on GitHub at <https://github.com/progala2/Story-Teller-Engine/blob/master/README.md>
 homepage:       https://github.com/progala2/Story-Teller-Engine#readme
 bug-reports:    https://github.com/progala2/Story-Teller-Engine/issues
@@ -77,12 +77,14 @@ test-suite Story-Teller-Engine-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Game.CommandParserTests
       Paths_Story_Teller_Engine
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Story-Teller-Engine
+      HUnit
+    , Story-Teller-Engine
     , ansi-terminal
     , base >=4.7 && <5
     , containers

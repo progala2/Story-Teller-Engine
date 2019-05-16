@@ -1,5 +1,5 @@
 name:                Story-Teller-Engine
-version:             0.4.2.0
+version:             0.4.3.0
 github:              "progala2/Story-Teller-Engine"
 license:             MIT
 author:              "Przemysław Rogala"
@@ -50,3 +50,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Story-Teller-Engine
+    - HUnit
