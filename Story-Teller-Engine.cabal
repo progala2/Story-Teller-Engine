@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.31.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f467c4729bf98cbe2c96a3308989d297ba79edd814f716c270d13a0e5464b376
+-- hash: cd0d145420fe5e81627fb0f3c99acc96742fc9552789d9d26aa08838cb3ee459
 
 name:           Story-Teller-Engine
 version:        0.4.3.0
@@ -78,6 +78,7 @@ test-suite Story-Teller-Engine-test
   main-is: Spec.hs
   other-modules:
       Game.CommandParserTests
+      TestBase
       Paths_Story_Teller_Engine
   hs-source-dirs:
       test
