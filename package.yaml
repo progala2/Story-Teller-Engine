@@ -50,4 +50,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Story-Teller-Engine
-    - HUnit
+    - hedgehog

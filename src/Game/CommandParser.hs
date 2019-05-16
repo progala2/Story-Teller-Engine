@@ -4,7 +4,7 @@ import Extensions.Parsec
 import qualified Game.Types as G
 import Extensions.Monad
 
-data Command = Travel G.LocName | ItemsOnObject [G.Item] G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item
+data Command = Travel G.LocName | ItemsOnObject [G.Item] G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item deriving(Show)
 
 parseCommand :: String -> Either ParseError Command
 parseCommand str = parse command "command" str

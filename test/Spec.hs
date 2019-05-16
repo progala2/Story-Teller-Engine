@@ -1,8 +1,6 @@
 module Main where
 import Test.HUnit
+import Game.CommandParserTests
 
 main :: IO ()
-main = (runTestTT $ TestList [TestLabel "test1" test1]) >> return ()
-
-
-test1 = TestCase (assertEqual "for (foo 3)," (1,2) (1, 3))
+main = (runTestTT $ commandParserTestsList) >> return ()
