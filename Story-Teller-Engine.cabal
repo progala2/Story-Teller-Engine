@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cd0d145420fe5e81627fb0f3c99acc96742fc9552789d9d26aa08838cb3ee459
+-- hash: d2edd2eb21cfd9bb7738f92df34db3112820800dbec3c0f93be1dd2c5911d266
 
 name:           Story-Teller-Engine
 version:        0.4.3.0
@@ -91,4 +91,5 @@ test-suite Story-Teller-Engine-test
     , hedgehog
     , mtl
     , parsec
+    , text
   default-language: Haskell2010

@@ -20,7 +20,7 @@ command = choice [
     tryE f = try (f <* endCheck)
     endCheck = spaces *> eof
     itemsOnObject = (,) 
-      <$> (G.Item <$$> (itemsOnObjectS *> between (spaces *> string "'" <* spaces) (spaces *> string "'"<* spaces) (sepBy1 stringSpaces (spaces *> char ',' <* spaces)) <* (spaces *> string "on ")))
+      <$> (G.Item <$$> (itemsOnObjectS *> between (spaces *> string "'" <* spaces) (spaces *> string "'"<* spaces) (sepEndBy1 stringSpaces (try (spaces *> char ',' <* spaces))) <* (spaces *> string "on ")))
       <*> (G.Object <$> stringSpaces)
 
 gotoS :: CharParser () String

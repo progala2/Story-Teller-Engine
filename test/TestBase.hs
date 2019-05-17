@@ -1,10 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 module TestBase where
 
 import           Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
+import           Data.List
 
 strings :: MonadGen m => Range.Range Int -> Range.Range Int -> m a -> m [[a]]
 strings r1 r2 g = Gen.list r1 (Gen.list r2 g)
@@ -12,9 +12,12 @@ alphaStringNE :: MonadGen m => m [Char]
 alphaStringNE = Gen.list (Range.linear 1 25) Gen.alpha
 randSpace :: MonadGen m => m [Char]
 randSpace = Gen.list (Range.linear 0 1) (return ' ')
-{-
-instance (MonadGen m, Semigroup a) => Semigroup (m a) where
-  g1 <> g2 =  do 
-    a1 <- g1
-    a2 <- g2
-    return $ a1 <> a2-}
+spaces :: MonadGen m => (Int, Int) -> m [Char]
+spaces (r1, r2) = Gen.list (Range.linear r1 r2) (return ' ')
+
+sentence :: Monad m => (Int, Int) -> (Int, Int) -> GenT m [Char]
+sentence (w1, w2) (s1, s2) = do
+  nr <- Gen.int (Range.linear s1 s2)
+  foldl' fld (Gen.list (Range.linear w1 w2) Gen.alpha) [1..nr]
+  where
+    fld a b = a <> (return " ") <> (Gen.list (Range.linear w1 w2) Gen.alpha)
