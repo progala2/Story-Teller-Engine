@@ -1,4 +1,4 @@
-module Game.CommandParser(parseCommand, Command (..)) where
+module Game.CommandParser where
 
 import Extensions.Parsec
 import qualified Game.Types as G
@@ -15,7 +15,7 @@ command = choice [
     uncurry ItemsOnObject <$> tryE itemsOnObject,
     tryE (checkBpS *> return CheckBp),
     PickUpItem . G.Item <$> tryE (pickUpItemS *> stringSpaces)
-    ]
+    ] <?> "I don't understand..."
   where
     tryE f = try (f <* endCheck)
     endCheck = spaces *> eof
@@ -37,4 +37,4 @@ choiceString [] = error "Can't be empty!"
 choiceString elems = choice $ (try . string) <$> elems
 
 stringSpaces :: CharParser () String
-stringSpaces = many1 letter <> (concat <$> many (try (string " " <> many1 letter) ))
+stringSpaces = many1 letter <> (concat <$> many (try (many1 (char ' ') <> many1 letter) ))

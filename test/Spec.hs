@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell  #-}
+{-# LANGUAGE TemplateHaskell  #-}
 module Main where
 import           Hedgehog
 import qualified Hedgehog.Gen as Gen
