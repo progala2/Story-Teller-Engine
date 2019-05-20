@@ -34,7 +34,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                 gameName = T.sGet go T.GameName
                 gameVersion = T.sGet go T.GameVersion
                 playerCapacity =  T.iGet go T.PlayerCapacity
-                endingLocation = T.sGet go T.EndingLocation
+                endingLocation = G.LocName <$> T.sGet go T.EndingLocation
             
             locations = M.fromList <$> rightsIfAll (location <$> M.toList locs)
               where

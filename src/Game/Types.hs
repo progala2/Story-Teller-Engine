@@ -57,7 +57,7 @@ data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 
     goPlayerCapacity::Int,
-    goEndingLocation::String
+    goEndingLocation::LocName
     } deriving(Show)
 type WorldStatus = (GameOptions, Locations)
 type GameStatus = (PlayerStatus, WorldStatus)

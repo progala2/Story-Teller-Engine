@@ -1,4 +1,4 @@
-module Game.Runner(runGame) where
+module Game.Runner where
 
 import System.Console.ANSI
 import Game.CommandParser
@@ -10,11 +10,10 @@ import Data.List
 import Data.Functor.Identity (Identity(..))
 
 runGame :: GameStateIO ()
-runGame = gameLoop "New Game has been started!"
+runGame = gameLoop
       where
         currLoc ((PlayerStatus cL _), (_, locs)) = locs M.! cL
-        gameLoop str = do 
-          putStrLnL str
+        gameLoop = do 
           ss@((PlayerStatus (LocName loc) _), _) <- S.get
           putStrLnL $ "Location: " ++ loc
           putStrLnL $ showDescription ss (currLoc ss)
@@ -22,14 +21,15 @@ runGame = gameLoop "New Game has been started!"
           line <- S.lift $ getLine
           S.lift $ clearScreen
           res <- raiseStateToT (either (\_ -> return "You wrote something really wrong!") handleCommand (parseCommand line)) 
-          gameLoop res
+          putStrLnL res
+          gameLoop
 
 handleCommand :: Command -> GameState String
 handleCommand (Travel dest) = do
   gs@((PlayerStatus pLocName items), (opts, locations)) <- S.get
   let currLoc = locations M.! pLocName
-  case locations M.!? dest of
-    Just _ ->
+  if dest `M.member` locations
+    then
       case lcTravelList currLoc M.!? dest of
         Just LocCanTravel -> travel items opts locations
         Just (LocCannotTravel ct cid str) -> if checkCondition gs currLoc (ct, cid) 
@@ -37,14 +37,22 @@ handleCommand (Travel dest) = do
           else return str
         Nothing -> nothing
       
-    Nothing -> nothing
+    else 
+      nothing
   where
     nothing = return $ "There is no " ++ (show dest) ++ "..."
     travel :: ItemSet -> GameOptions -> Locations -> GameState String
     travel items opts lc = do
       S.put (PlayerStatus dest items, (opts, lc))
       return $ "You travel to: " ++ (show dest)
-handleCommand (ItemsOnObject items obj) = return $ "Not yet implemented" ++ (show items) ++ (show obj)
+
+handleCommand (ItemsOnObject items obj) = do
+  ((PlayerStatus _ plItems), (_, _)) <- S.get
+  case hasNotItems items plItems of
+    Nothing -> return $ "Not yet implemented" ++ (show items) ++ (show obj)
+    Just is -> return $ "You don't have these items: " ++ (show is)
+  where 
+    
 handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl' sepByLn [] (show <$> Set.toList items))
 handleCommand (PickUpItem _) = return $ "Not yet implemented"
 handleCommand (ThrowItem _) = return $ "Not yet implemented"
@@ -65,10 +73,16 @@ checkCondition (_, _) loc (ct, cid) = case ct of
         objCond obj = Set.member obj (lcObjects loc)
         itemCond item = Set.member item (lcItems loc)
 
--- printL :: (Show a) => a -> GameStateIO ()
--- printL str = S.lift $ print str
---putStrL :: String -> GameStateIO ()
---putStrL str = S.lift $ putStr str
+hasNotItems :: (Foldable t, Ord a) => t a -> Set.Set a -> Maybe [a]
+hasNotItems items plItems = foldl' (nCorrectItem) Nothing items
+  where 
+    nCorrectItem Nothing i = if Set.member i plItems 
+      then Nothing
+      else Just $ i:[]
+    nCorrectItem (Just is) i = if Set.member i plItems
+      then Just is
+      else Just $ i:is
+
 putStrLnL :: String -> GameStateIO ()
 putStrLnL str = S.lift $ putStrLn str
 sepByLn :: String -> String -> String

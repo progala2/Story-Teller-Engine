@@ -22,4 +22,4 @@ sentenceSp (sp1, sp2) (w1, w2) (s1, s2) = do
   nr <- Gen.int (Range.linear s1 s2)
   foldl' fld (Gen.list (Range.linear w1 w2) Gen.alpha) [1..nr]
   where
-    fld a b = a <> spaces (sp1, sp2) <> (Gen.list (Range.linear w1 w2) Gen.alpha)
+    fld a _ = a <> spaces (sp1, sp2) <> (Gen.list (Range.linear w1 w2) Gen.alpha)
