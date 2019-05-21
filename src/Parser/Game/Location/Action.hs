@@ -6,6 +6,7 @@ import Data.Either
 import qualified Game.Types as G
 import qualified Parser.Text.Tokens as T
 import qualified Parser.Text.Option as T
+import qualified Data.Set as Set
 
 action :: T.Action -> Either LoaderError G.Action
 action act = case T.sGet act T.AotType of
@@ -15,7 +16,7 @@ action act = case T.sGet act T.AotType of
     Left str -> Left str
     where
       useItemsOnObject = G.ActionUseItemsOnObject 
-        <$> (G.Item <$$> T.saGet act T.AotUsedItems) 
+        <$> (Set.fromList <$> G.Item <$$> T.saGet act T.AotUsedItems) 
         <*> (G.Object <$> T.sGet act T.AotUsedOn)
         <*> T.sGet act T.AotComment
         <*> Right results

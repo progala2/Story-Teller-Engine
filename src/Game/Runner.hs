@@ -7,6 +7,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import Game.Types
 import Data.List
+import qualified Data.List.Ordered as LO
 import Data.Functor.Identity (Identity(..))
 
 runGame :: GameStateIO ()
@@ -47,15 +48,28 @@ handleCommand (Travel dest) = do
       return $ "You travel to: " ++ (show dest)
 
 handleCommand (ItemsOnObject items obj) = do
-  ((PlayerStatus _ plItems), (_, _)) <- S.get
+  ((PlayerStatus pLocName plItems), (_, locations)) <- S.get
   case hasNotItems items plItems of
-    Nothing -> return $ "Not yet implemented" ++ (show items) ++ (show obj)
-    Just is -> return $ "You don't have these items: " ++ (show is)
+    Nothing -> do
+      let currLoc = locations M.! pLocName 
+      let objects = lcObjects currLoc
+      case hasNotItems [obj] objects of
+        Nothing -> do 
+          let actions = lcActions currLoc
+          case find canApplyItemsOnObject actions of
+            Just _ -> return "Action applied!"
+            Nothing -> return "I can't do it."
+        _ -> return "There is no object like that!"
+    Just is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
   where 
-    
+    canApplyItemsOnObject (ActionUseItemsOnObject aItms aObj _ _) 
+      | Set.difference aItms items == Set.empty && aObj == obj = True
+      | otherwise = False
+    canApplyItemsOnObject _ = False
 handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl' sepByLn [] (show <$> Set.toList items))
 handleCommand (PickUpItem _) = return $ "Not yet implemented"
 handleCommand (ThrowItem _) = return $ "Not yet implemented"
+
 
 showDescription :: GameStatus -> Location -> String
 showDescription gs l = foldl' sepByLn [] $ desc <$> M.elems (lcDescList l)

@@ -25,6 +25,7 @@ dependencies:
 - containers
 - mtl
 - ansi-terminal
+- data-ordlist
 
 library:
   source-dirs: src

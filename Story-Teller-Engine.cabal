@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 46b41d83f983fd0a5bd87dd5e459c97530af9e884dd36ec0d93696f244966020
+-- hash: cb9a9a1cac1b60f4656b058063184e49d566627b3fc3acca1c6d4f043e4dc5a8
 
 name:           Story-Teller-Engine
 version:        0.4.3.0
@@ -53,6 +53,7 @@ library
       ansi-terminal
     , base >=4.7 && <5
     , containers
+    , data-ordlist
     , mtl
     , parsec
   default-language: Haskell2010
@@ -69,6 +70,7 @@ executable Story-Teller-Engine-exe
     , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , data-ordlist
     , mtl
     , parsec
   default-language: Haskell2010
@@ -89,6 +91,7 @@ test-suite Story-Teller-Engine-test
     , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , data-ordlist
     , hedgehog
     , mtl
     , parsec

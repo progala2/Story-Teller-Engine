@@ -3,8 +3,9 @@ module Game.CommandParser where
 import Extensions.Parsec
 import qualified Game.Types as G
 import Extensions.Monad
+import qualified Data.Set as Set
 
-data Command = Travel G.LocName | ItemsOnObject [G.Item] G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item deriving(Show)
+data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item deriving(Show)
 
 parseCommand :: String -> Either ParseError Command
 parseCommand str = parse command "command" str
@@ -20,7 +21,7 @@ command = choice [
     tryE f = try (f <* endCheck)
     endCheck = spaces *> eof
     itemsOnObject = (,) 
-      <$> (G.Item <$$> (itemsOnObjectS *> between (spaces *> string "'" <* spaces) (spaces *> string "'"<* spaces) (sepEndBy1 stringSpaces (try (spaces *> char ',' <* spaces))) <* (spaces *> string "on ")))
+      <$> (Set.fromList <$> G.Item <$$> (itemsOnObjectS *> between (spaces *> string "'" <* spaces) (spaces *> string "'"<* spaces) (sepEndBy1 stringSpaces (try (spaces *> char ',' <* spaces))) <* (spaces *> string "on ")))
       <*> (G.Object <$> stringSpaces)
 
 gotoS :: CharParser () String

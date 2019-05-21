@@ -9,6 +9,7 @@ import qualified TestBase as Gen
 import qualified Game.CommandParser as C
 import qualified Game.Types as G
 import qualified Extensions.Parsec as C
+import qualified Data.Set as Set
 import qualified Data.Either as E
 import Game.Types
 import Data.List (intercalate)
@@ -16,17 +17,18 @@ import Data.List (intercalate)
 tests :: IO Bool
 tests = checkParallel $$(discover)
 
-prop_useItemsCommandWithManyItemsWithMinimalSpaces :: Property
-prop_useItemsCommandWithManyItemsWithMinimalSpaces = property $ do
-  item <- forAll $ Gen.list (Range.linear 1 100) (Gen.spaces (0, 10) <> Gen.sentence (1, 15) (1, 4) <> Gen.spaces (0, 10))
+prop_useItemsCommand :: Property
+prop_useItemsCommand = property $ do
+  item <- forAll $ Gen.list (Range.linear 1 20) (Gen.spaces (0, 10) <> Gen.sentence (1, 15) (1, 4) <> Gen.spaces (0, 10))
+  let itemsDouble = item ++ item 
   object <-forAll $ Gen.alphaStringNE <> Gen.randSpace <> Gen.alphaStringNE
-  (C.parseCommand $ "use items '" ++ (intercalate "," item) ++ "' on " ++ object) 
+  (C.parseCommand $ "use items '" ++ (intercalate "," itemsDouble) ++ "' on " ++ object) 
     `eqComm` 
-      (C.ItemsOnObject (Item . unpack . strip . pack <$> item) (Object object))
+      (C.ItemsOnObject (Set.fromList $ Item . unpack . strip . pack <$> item) (Object object))
 
 prop_travelCommandReadsTravelPlace :: Property
 prop_travelCommandReadsTravelPlace = property $ do
-  item <- forAll $ (Gen.string (Range.linear 1 50) Gen.alpha)
+  item <- forAll $ (Gen.string (Range.linear 1 20) Gen.alpha)
   (C.parseCommand $ "go to " ++ item) 
     `eqComm` 
       (C.Travel (G.LocName item))

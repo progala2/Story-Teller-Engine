@@ -18,7 +18,7 @@ data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
 data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show)
 data Action = 
   ActionUseItemsOnObject { 
-    auiooItemsUsed::[Item],
+    aItemsUsed::ItemSet,
     aObject::Object, 
     aComment::String,
     aResults::[ActionResult]
