@@ -57,8 +57,9 @@ handleCommand (ItemsOnObject items obj) = do
         Nothing -> do 
           let actions = lcActions currLoc
           case find canApplyItemsOnObject actions of
-            Just _ -> return "Action applied!"
-            Nothing -> return "I can't do it."
+            Just (ActionUseItemsOnObject _ _ com ress) -> 
+              return "Action applied!"
+            _ -> return "I can't do it."
         _ -> return "There is no object like that!"
     Just is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
   where 
@@ -96,6 +97,12 @@ hasNotItems items plItems = foldl' (nCorrectItem) Nothing items
     nCorrectItem (Just is) i = if Set.member i plItems
       then Just is
       else Just $ i:is
+
+applyActionResults :: G.Location -> ActionResult -> GameState ()
+applyActionResults (ArAddLocationItems itms) = do
+  ((PlayerStatus pLocName _), (_, locations)) <- S.get
+  return ()
+applyActionResults (ArRemoveObjects objs) = return ()
 
 putStrLnL :: String -> GameStateIO ()
 putStrLnL str = S.lift $ putStrLn str

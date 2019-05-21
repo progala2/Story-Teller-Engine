@@ -17,4 +17,8 @@ rightsIfAll rs = case foldl fldFunc ("", []) rs of
     fldFunc (l, _) (Right _) = (l, [])
 
 (<$$>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
-f <$$> fga = (f <$>) <$> fga 
+(<$$>) = fmap fmap fmap
+
+infixl 4 <.>
+(<.>) :: (Applicative f) => f (a -> b) -> a -> f b
+f <.> a = f <*> pure a

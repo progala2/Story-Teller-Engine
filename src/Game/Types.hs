@@ -43,6 +43,8 @@ data Location = Location {
     lcConditions::Conditions
     } deriving(Show)
 type Locations = M.Map LocName Location
+type DescMap = (M.Map DescOrder LocDesc)
+type TravelMap = (M.Map LocName LocCanTravel)
 
 lcCondition :: Location -> CondId -> Condition
 lcCondition l cid = lcConditions l M.! cid
