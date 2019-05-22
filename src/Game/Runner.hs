@@ -13,11 +13,10 @@ import Data.Functor.Identity (Identity(..))
 runGame :: GameStateIO ()
 runGame = gameLoop
       where
-        currLoc ((PlayerStatus cL _), (_, locs)) = locs M.! cL
         gameLoop = do 
-          ss@((PlayerStatus (LocName loc) _), _) <- S.get
-          putStrLnL $ "Location: " ++ loc
-          putStrLnL $ showDescription ss (currLoc ss)
+          ss@((PlayerStatus currLoc _), _) <- S.get
+          putStrLnL $ "Location: " ++ (show currLoc)
+          putStrLnL $ showDescription ss currLoc
           putStrLnL "What now? : "
           line <- S.lift $ getLine
           S.lift $ clearScreen
@@ -27,38 +26,32 @@ runGame = gameLoop
 
 handleCommand :: Command -> GameState String
 handleCommand (Travel dest) = do
-  gs@((PlayerStatus pLocName items), (opts, locations)) <- S.get
-  let currLoc = locations M.! pLocName
-  if dest `M.member` locations
-    then
+  gs@((PlayerStatus currLoc _), (_, locations)) <- S.get
+  case locations M.!? dest of
+    Just destLoc ->
       case lcTravelList currLoc M.!? dest of
-        Just LocCanTravel -> travel items opts locations
-        Just (LocCannotTravel ct cid str) -> if checkCondition gs currLoc (ct, cid) 
-          then travel items opts locations
+        Just LocCanTravel -> travel (dest, destLoc)
+        Just (LocCannotTravel ct cid str) -> 
+          if checkCondition gs currLoc (ct, cid) 
+          then travel (dest, destLoc)
           else return str
         Nothing -> nothing
-      
-    else 
+    _ -> 
       nothing
   where
     nothing = return $ "There is no " ++ (show dest) ++ "..."
-    travel :: ItemSet -> GameOptions -> Locations -> GameState String
-    travel items opts lc = do
-      S.put (PlayerStatus dest items, (opts, lc))
-      return $ "You travel to: " ++ (show dest)
-
+    
 handleCommand (ItemsOnObject items obj) = do
-  ((PlayerStatus pLocName plItems), (_, locations)) <- S.get
+  ((PlayerStatus currLoc plItems), _) <- S.get
   case hasNotItems items plItems of
     Nothing -> do
-      let currLoc = locations M.! pLocName 
       let objects = lcObjects currLoc
       case hasNotItems [obj] objects of
         Nothing -> do 
           let actions = lcActions currLoc
           case find canApplyItemsOnObject actions of
             Just (ActionUseItemsOnObject _ _ com ress) -> 
-              return "Action applied!"
+              do mapM_ applyActionResults ress; return com;
             _ -> return "I can't do it."
         _ -> return "There is no object like that!"
     Just is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
@@ -71,6 +64,11 @@ handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl'
 handleCommand (PickUpItem _) = return $ "Not yet implemented"
 handleCommand (ThrowItem _) = return $ "Not yet implemented"
 
+travel :: (LocName, Location) -> GameState String
+travel destLoc = do
+  ((PlayerStatus _ plItems), ws) <- S.get
+  S.put (PlayerStatus (snd destLoc) plItems, ws)
+  return $ "You travel to: " ++ (show $ fst destLoc)
 
 showDescription :: GameStatus -> Location -> String
 showDescription gs l = foldl' sepByLn [] $ desc <$> M.elems (lcDescList l)
@@ -98,11 +96,11 @@ hasNotItems items plItems = foldl' (nCorrectItem) Nothing items
       then Just is
       else Just $ i:is
 
-applyActionResults :: G.Location -> ActionResult -> GameState ()
-applyActionResults (ArAddLocationItems itms) = do
-  ((PlayerStatus pLocName _), (_, locations)) <- S.get
+applyActionResults :: ActionResult -> GameState ()
+applyActionResults (ArAddLocationItems _) = do
+  ((PlayerStatus _ _), (_, _)) <- S.get
   return ()
-applyActionResults (ArRemoveObjects objs) = return ()
+applyActionResults (ArRemoveObjects _) = return ()
 
 putStrLnL :: String -> GameStateIO ()
 putStrLnL str = S.lift $ putStrLn str

@@ -54,7 +54,7 @@ newtype Object = Object String deriving(Eq, Ord, Show)
 type ItemSet = Set.Set Item
 type ObjectSet = Set.Set Object
 
-data PlayerStatus = PlayerStatus LocName ItemSet deriving(Show)
+data PlayerStatus = PlayerStatus Location ItemSet deriving(Show)
 data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 

@@ -17,12 +17,16 @@ import Parser.Errors
 loadGame::String -> Either LoaderError G.GameStatus
 loadGame = (either (Left . show) tokensToGame) . parseGameFile 
   where 
-    tokensToGame (go, locs) = (,) <$> playerStatus <*> worldStatus
+    tokensToGame (go, locs) = do 
+      ws@(_, glocs) <- worldStatus
+      (,) <$> playerStatus glocs <.> ws
       where
-        playerStatus = G.PlayerStatus <$> startingLocation <*> Right Set.empty
+        playerStatus glocs = G.PlayerStatus <$> (startLocName >>= startLoc) <*> Right Set.empty
           where
-            startingLocation = G.LocName <$> T.sGet go T.StartingLocation
-        
+            startLocName = G.LocName <$> T.sGet go T.StartingLocation
+            startLoc s = case glocs M.!? s of 
+              Just a -> Right a
+              _ -> Left "There is no starting location like that!"
         worldStatus = (,) <$> gameOptions <*> locations
           where
             gameOptions = G.GameOptions 

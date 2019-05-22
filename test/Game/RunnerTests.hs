@@ -26,7 +26,7 @@ prop_handleCommandItemsOnObjectWithSomeItemsMissing = property $ do
   itemsMiss <- forAll $ itemsS (R.linear 1 5) Gen.upper
   allItems <- forAll $ Set.fromList <$> Gen.shuffle (itms ++ itemsMiss)
   obj <- forAll $ object
-  gs <- forAll $ gameStatus (Set.fromList itms) (locations (R.linear 1 1) Nothing Nothing (Just $ return $ Set.fromList [obj]) Nothing Nothing Nothing Nothing)
+  gs <- forAll $ gameStatus (Set.fromList itms) (locations (R.linear 1 1) Nothing Nothing (justGenSet [obj]) Nothing Nothing Nothing Nothing)
   (S.evalState (G.handleCommand (C.ItemsOnObject allItems obj)) gs)
     ===
       ("You don't have these items: " ++ (show $ LO.sort itemsMiss))
@@ -35,7 +35,7 @@ prop_handleCommandItemsOnObjectNoAction :: Property
 prop_handleCommandItemsOnObjectNoAction = property $ do
   itms <- forAll $ Set.fromList <$> items (R.linear 1 5)
   obj <- forAll $ object
-  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (Just $ return $ Set.fromList [obj]) Nothing Nothing Nothing Nothing)
+  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (justGenSet [obj]) Nothing Nothing Nothing Nothing)
   (S.evalState (G.handleCommand (C.ItemsOnObject itms obj)) gs)
     ===
       ("I can't do it.")
@@ -44,7 +44,7 @@ prop_handleCommandItemsOnObjectActionApplied :: Property
 prop_handleCommandItemsOnObjectActionApplied = property $ do
   itms <- forAll $ Set.fromList <$> items (R.linear 1 5)
   obj <- forAll $ object
-  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (Just $ return $ Set.fromList [obj]) Nothing Nothing Nothing Nothing)
+  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (justGenSet [obj]) Nothing Nothing Nothing Nothing)
   (S.evalState (G.handleCommand (C.ItemsOnObject itms obj)) gs)
     ===
       ("I can't do it.")
@@ -92,7 +92,7 @@ locations r
 
 gameStatus :: MonadGen m => Set.Set G.Item -> m G.Locations -> m G.GameStatus
 gameStatus itms loc = loc >>= (\l ->
-     (,) (G.PlayerStatus (fst (M.elemAt 0 l)) itms) 
+     (,) (G.PlayerStatus (snd (M.elemAt 0 l)) itms) 
       <$> ((,) <$> gameOptions <.> l) )
 
 defM :: Monad m => a -> Maybe (m a) -> m a
@@ -103,3 +103,6 @@ def a m = fromMaybe a m
 
 defMM :: (Monoid a, Monad m, Monoid (m a)) => Maybe (m a) -> m a
 defMM = fromMaybe mempty
+
+justGenSet :: (Ord a, Monad m) => [a] -> Maybe (m (Set.Set a))
+justGenSet = Just . return . Set.fromList
