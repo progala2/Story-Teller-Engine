@@ -1,20 +1,14 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Game.RunnerTests where
 
 import           Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as R
-import qualified TestBase as Gen
 import qualified Game.Runner as G
 import qualified Game.CommandParser as C
-import qualified Game.Types as G
 import qualified Control.Monad.State.Lazy as S
 import qualified Data.Set as Set
-import qualified Data.Map.Strict as M
-import Extensions.Monad
-import Data.Maybe (fromMaybe)
-import Data.Monoid (Monoid, mempty)
-import Control.Monad (Monad)
+import Game.Builders
 import qualified Data.List.Ordered as LO
 
 tests :: IO Bool
@@ -48,61 +42,3 @@ prop_handleCommandItemsOnObjectActionApplied = property $ do
   (S.evalState (G.handleCommand (C.ItemsOnObject itms obj)) gs)
     ===
       ("I can't do it.")
-
-gameOptions :: MonadGen m => m G.GameOptions
-gameOptions = G.GameOptions 
-  <$> Gen.alphaStringNE 
-  <*> Gen.alphaStringNE 
-  <*> Gen.int (R.linear 1 5) 
-  <*> (G.LocName <$> Gen.alphaStringNE)
-
-items :: MonadGen m => R.Range Int -> m [G.Item]
-items r = G.Item <$$> (Gen.strings r (R.linear 10 20) Gen.alpha)
-
-itemsS :: MonadGen m => R.Range Int -> m Char -> m [G.Item]
-itemsS r g = G.Item <$$> (Gen.strings r (R.linear 10 20) g)
-object :: MonadGen m => m G.Object
-object = G.Object <$> (Gen.string (R.linear 10 20) Gen.alpha)
-
-locations :: Monad m =>
-            R.Range Int ->
-            Maybe (GenT m G.DescMap) -> 
-            Maybe (GenT m G.TravelMap) -> 
-            Maybe (GenT m G.ObjectSet) -> 
-            Maybe (GenT m G.ItemSet) ->
-            Maybe (GenT m G.Actions) ->
-            Maybe (GenT m G.Conditions) ->
-            Maybe (GenT m G.LocName) ->
-            GenT m G.Locations
-locations r 
-          (defMM -> descList) 
-          (defMM -> travelList) 
-          (defMM -> objects) 
-          (defMM -> itms)
-          (defMM -> actions)
-          (defMM -> conditions) 
-          (def (G.LocName <$> Gen.alphaStringNE) -> locName) =
-            M.fromList <$> Gen.list r ((,) <$> locName <*> (G.Location 
-            <$> descList 
-            <*> travelList
-            <*> objects
-            <*> itms
-            <*> actions
-            <*> conditions))
-
-gameStatus :: MonadGen m => Set.Set G.Item -> m G.Locations -> m G.GameStatus
-gameStatus itms loc = loc >>= (\l ->
-     (,) (G.PlayerStatus (snd (M.elemAt 0 l)) itms) 
-      <$> ((,) <$> gameOptions <.> l) )
-
-defM :: Monad m => a -> Maybe (m a) -> m a
-defM a m = fromMaybe (return a) m
-
-def :: a -> Maybe a -> a
-def a m = fromMaybe a m
-
-defMM :: (Monoid a, Monad m, Monoid (m a)) => Maybe (m a) -> m a
-defMM = fromMaybe mempty
-
-justGenSet :: (Ord a, Monad m) => [a] -> Maybe (m (Set.Set a))
-justGenSet = Just . return . Set.fromList

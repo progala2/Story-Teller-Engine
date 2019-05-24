@@ -51,7 +51,7 @@ handleCommand (ItemsOnObject items obj) = do
           let actions = lcActions currLoc
           case find canApplyItemsOnObject actions of
             Just (ActionUseItemsOnObject _ _ com ress) -> 
-              do mapM_ applyActionResults ress; return com;
+              mapM_ applyActionResults ress >> return com
             _ -> return "I can't do it."
         _ -> return "There is no object like that!"
     Just is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
