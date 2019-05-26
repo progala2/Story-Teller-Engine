@@ -60,9 +60,9 @@ actionUseItemsOnObject :: Monad m =>
             MaybeGenT m [G.ActionResult] ->
             GenT m G.Action
 actionUseItemsOnObject
-    (defMM -> itms) 
-    (defMM -> obj) 
-    (defMM -> comm) 
+    (def (Set.fromList <$> items (R.linear 3 3)) -> itms) 
+    (def object -> obj) 
+    (def Gen.alphaStringNE -> comm) 
     (defMM -> ress) =
     G.ActionUseItemsOnObject 
         <$> itms 
@@ -85,5 +85,8 @@ def a m = fromMaybe a m
 defMM :: (Monoid a, Monad m, Monoid (m a)) => Maybe (m a) -> m a
 defMM = fromMaybe mempty
 
-justGenSet :: (Ord a, Monad m) => [a] -> Maybe (m (Set.Set a))
-justGenSet = Just . return . Set.fromList
+justMonSet :: (Ord a, Monad m) => [a] -> Maybe (m (Set.Set a))
+justMonSet = justMon . Set.fromList
+
+justMon :: (Monad m) => a -> Maybe (m a)
+justMon = Just . return

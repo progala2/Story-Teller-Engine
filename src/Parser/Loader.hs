@@ -25,7 +25,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
           where
             startLocName = G.LocName <$> T.sGet go T.StartingLocation
             startLoc s = case glocs M.!? s of 
-              Just a -> Right a
+              Just a -> Right (s, a)
               _ -> Left "There is no starting location like that!"
         worldStatus = (,) <$> gameOptions <*> locations
           where
@@ -59,9 +59,9 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                           (k, (T.LocDesc (T.Global idG) s)) -> (G.DescOrder k, G.LocDescCond G.CondGlobal (G.CondId idG) s);
                           (k, (T.LocDesc (T.None) s)) -> (G.DescOrder k, G.LocDesc s)
                     
-                    locTravelList = T.tGet locOpts T.LocTravelList mapTravelMap
+                    locTravelList = E.fromRight (Right M.empty) $ T.tGet locOpts T.LocTravelList mapTravelMap
                       where
-                        mapTravelMap (T.LocTravelListV mp) = M.fromList $ travel <$> M.toList mp
+                        mapTravelMap (T.LocTravelListV mp) = M.fromList <$> rightsIfAll ((travel locK) <$> M.toList mp)
                         mapTravelMap _ = errCant
 
                     locObjects = Set.fromList $ T.saGetD locOpts T.LocObjects G.Object

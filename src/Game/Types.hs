@@ -42,9 +42,22 @@ data Location = Location {
     lcActions::Actions,
     lcConditions::Conditions
     } deriving(Show)
+type LocationP = (LocName, Location)
 type Locations = M.Map LocName Location
 type DescMap = (M.Map DescOrder LocDesc)
 type TravelMap = (M.Map LocName LocCanTravel)
+
+addItemsToLoc :: [Item] -> LocationP -> LocationP
+addItemsToLoc is (nm, Location d t o itms a c) = 
+  (nm, Location d t o (Set.union (Set.fromList is) itms) a c)
+removeObjectsFromLoc :: [Object] -> LocationP -> LocationP
+removeObjectsFromLoc os (nm, Location d t objs i a c) = 
+  (nm, Location d t (objs Set.\\ (Set.fromList os)) i a c )
+removeItemFromLoc :: Item -> LocationP -> LocationP
+removeItemFromLoc i (nm, Location d t objs itms a c) = 
+  (nm, Location d t objs (Set.delete i itms) a c)
+itemExists :: Item -> LocationP -> Bool
+itemExists it (_, loc) = it `Set.member` lcItems loc
 
 lcCondition :: Location -> CondId -> Condition
 lcCondition l cid = lcConditions l M.! cid
@@ -54,7 +67,7 @@ newtype Object = Object String deriving(Eq, Ord, Show)
 type ItemSet = Set.Set Item
 type ObjectSet = Set.Set Object
 
-data PlayerStatus = PlayerStatus Location ItemSet deriving(Show)
+data PlayerStatus = PlayerStatus LocationP ItemSet deriving(Show)
 data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 
@@ -66,3 +79,9 @@ type GameStatus = (PlayerStatus, WorldStatus)
 
 type GameStateIO a = S.StateT GameStatus IO a
 type GameState a = S.State GameStatus a
+type GameStateM m a = S.StateT GameStatus m a
+
+getLocations :: GameState (LocationP, Locations)
+getLocations = do
+  (PlayerStatus currLoc _, (_, locations)) <- S.get
+  return (currLoc, locations)

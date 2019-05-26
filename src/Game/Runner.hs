@@ -14,70 +14,72 @@ runGame :: GameStateIO ()
 runGame = gameLoop
       where
         gameLoop = do 
-          ss@((PlayerStatus currLoc _), _) <- S.get
+          ((PlayerStatus currLoc _), _) <- S.get
           putStrLnL $ "Location: " ++ (show currLoc)
-          putStrLnL $ showDescription ss currLoc
+          putStrLnL $ showDescription $ snd currLoc
           putStrLnL "What now? : "
           line <- S.lift $ getLine
           S.lift $ clearScreen
-          res <- raiseStateToT (either (\_ -> return "You wrote something really wrong!") handleCommand (parseCommand line)) 
+          res <- liftT (either (\_ -> return "You wrote something really wrong!") handleCommand (parseCommand line)) 
           putStrLnL res
           gameLoop
 
 handleCommand :: Command -> GameState String
-handleCommand (Travel dest) = do
-  gs@((PlayerStatus currLoc _), (_, locations)) <- S.get
-  case locations M.!? dest of
-    Just destLoc ->
-      case lcTravelList currLoc M.!? dest of
-        Just LocCanTravel -> travel (dest, destLoc)
-        Just (LocCannotTravel ct cid str) -> 
-          if checkCondition gs currLoc (ct, cid) 
-          then travel (dest, destLoc)
-          else return str
-        Nothing -> nothing
-    _ -> 
-      nothing
+handleCommand (Travel dest) =
+  downMb nothing travelCommand
   where
-    nothing = return $ "There is no " ++ (show dest) ++ "..."
-    
+    nothing = "There is no " ++ (show dest) ++ "..."
+    travelCommand :: GameStateM Maybe String
+    travelCommand = do
+      (currLoc, locations) <- liftT getLocations
+      destLoc <- S.lift $ locations M.!? dest
+      trvl <- S.lift $ lcTravelList (snd currLoc) M.!? dest
+      case trvl of
+        LocCanTravel -> liftT $ travel (dest, destLoc)
+        (LocCannotTravel ct cid str) -> 
+          if checkCondition (snd currLoc) (ct, cid) 
+          then liftT $ travel (dest, destLoc)
+          else return str
+
 handleCommand (ItemsOnObject items obj) = do
   ((PlayerStatus currLoc plItems), _) <- S.get
   case hasNotItems items plItems of
-    Nothing -> do
-      let objects = lcObjects currLoc
-      case hasNotItems [obj] objects of
-        Nothing -> do 
-          let actions = lcActions currLoc
-          case find canApplyItemsOnObject actions of
+    Right _ ->
+      case hasNotItems [obj] (lcObjects $ snd currLoc) of
+        Right _ ->
+          case find canApplyItemsOnObject (lcActions $ snd currLoc) of
             Just (ActionUseItemsOnObject _ _ com ress) -> 
               mapM_ applyActionResults ress >> return com
             _ -> return "I can't do it."
         _ -> return "There is no object like that!"
-    Just is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
+    Left is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
   where 
     canApplyItemsOnObject (ActionUseItemsOnObject aItms aObj _ _) 
       | Set.difference aItms items == Set.empty && aObj == obj = True
       | otherwise = False
     canApplyItemsOnObject _ = False
 handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl' sepByLn [] (show <$> Set.toList items))
-handleCommand (PickUpItem _) = return $ "Not yet implemented"
+handleCommand (PickUpItem it) = do 
+  (PlayerStatus currLoc plItems, ws) <- S.get
+  if itemExists it currLoc 
+    then S.put (PlayerStatus (removeItemFromLoc it currLoc) (Set.insert it plItems), ws) >> return "Item taken."
+    else return "There is no such item in this location..."
 handleCommand (ThrowItem _) = return $ "Not yet implemented"
 
-travel :: (LocName, Location) -> GameState String
+travel :: LocationP -> GameState String
 travel destLoc = do
-  ((PlayerStatus _ plItems), ws) <- S.get
-  S.put (PlayerStatus (snd destLoc) plItems, ws)
+  (PlayerStatus currLoc plItems, (go, locs)) <- S.get
+  S.put (PlayerStatus destLoc plItems, (go, insert2 currLoc locs))
   return $ "You travel to: " ++ (show $ fst destLoc)
 
-showDescription :: GameStatus -> Location -> String
-showDescription gs l = foldl' sepByLn [] $ desc <$> M.elems (lcDescList l)
+showDescription :: Location -> String
+showDescription l = foldl' sepByLn [] $ desc <$> M.elems (lcDescList l)
   where
     desc (LocDesc str) = str
-    desc (LocDescCond ct cid str) = if checkCondition gs l (ct, cid) then str else ""
+    desc (LocDescCond ct cid str) = if checkCondition l (ct, cid) then str else ""
 
-checkCondition :: GameStatus -> Location -> (CondType, CondId) -> Bool
-checkCondition (_, _) loc (ct, cid) = case ct of
+checkCondition :: Location -> (CondType, CondId) -> Bool
+checkCondition loc (ct, cid) = case ct of
   CondLocal -> condition $ lcCondition loc cid
   CondGlobal -> False
   where 
@@ -86,21 +88,23 @@ checkCondition (_, _) loc (ct, cid) = case ct of
         objCond obj = Set.member obj (lcObjects loc)
         itemCond item = Set.member item (lcItems loc)
 
-hasNotItems :: (Foldable t, Ord a) => t a -> Set.Set a -> Maybe [a]
-hasNotItems items plItems = foldl' (nCorrectItem) Nothing items
+hasNotItems :: (Foldable t, Ord a) => t a -> Set.Set a -> Either [a] ()
+hasNotItems items plItems = foldl' (nCorrectItem) (Right ()) items
   where 
-    nCorrectItem Nothing i = if Set.member i plItems 
-      then Nothing
-      else Just $ i:[]
-    nCorrectItem (Just is) i = if Set.member i plItems
-      then Just is
-      else Just $ i:is
+    nCorrectItem (Right _) i = if Set.member i plItems 
+      then Right ()
+      else Left $ i:[]
+    nCorrectItem (Left is) i = if Set.member i plItems
+      then Left is
+      else Left $ i:is
 
 applyActionResults :: ActionResult -> GameState ()
-applyActionResults (ArAddLocationItems _) = do
-  ((PlayerStatus _ _), (_, _)) <- S.get
-  return ()
-applyActionResults (ArRemoveObjects _) = return ()
+applyActionResults (ArAddLocationItems aItms) = do
+  (PlayerStatus currLoc plIt, ws) <- S.get
+  S.put (PlayerStatus (addItemsToLoc aItms currLoc) plIt, ws)
+applyActionResults (ArRemoveObjects objs) = do
+  (PlayerStatus currLoc plIt, ws) <- S.get
+  S.put (PlayerStatus (removeObjectsFromLoc objs currLoc) plIt, ws)
 
 putStrLnL :: String -> GameStateIO ()
 putStrLnL str = S.lift $ putStrLn str
@@ -109,5 +113,23 @@ sepByLn = sepBy "\n" (++)
 
 sepBy :: a -> (a -> a -> a) -> a -> a -> a
 sepBy s f a b = a `f` s `f` b
-raiseStateToT :: Monad m => S.StateT s Identity a -> S.StateT s m a
-raiseStateToT = S.mapStateT (\(Identity (s, a)) -> return (s, a))
+
+liftT :: Monad m => S.StateT s Identity a -> S.StateT s m a
+liftT = S.mapStateT (\(Identity (a, s)) -> return (a, s))
+
+--downStateFromE :: Monad m => S.StateT s (Either e) a -> S.StateT s Identity e
+--downStateFromE f st = S.mapStateT mapper st
+--  where
+--    mapper (Left e) = lift (f e)
+--    mapper (Right (a, s)) = return (a, s)
+
+downMb :: a -> S.StateT s Maybe a -> S.StateT s Identity a
+downMb f st = do
+  oldSt <- S.get
+  S.mapStateT (mapper oldSt) st
+  where
+    mapper oldSt Nothing = Identity (f, oldSt)
+    mapper _ (Just (a, s)) = Identity (a, s)
+
+insert2 ::Ord a => (a, b) -> M.Map a b -> M.Map a b
+insert2 (a, b) m = M.insert a b m

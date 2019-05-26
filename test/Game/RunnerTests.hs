@@ -2,9 +2,11 @@
 module Game.RunnerTests where
 
 import           Hedgehog
+import qualified TestBase as Gen
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as R
 import qualified Game.Runner as G
+import qualified Game.Types as G
 import qualified Game.CommandParser as C
 import qualified Control.Monad.State.Lazy as S
 import qualified Data.Set as Set
@@ -20,7 +22,7 @@ prop_handleCommandItemsOnObjectWithSomeItemsMissing = property $ do
   itemsMiss <- forAll $ itemsS (R.linear 1 5) Gen.upper
   allItems <- forAll $ Set.fromList <$> Gen.shuffle (itms ++ itemsMiss)
   obj <- forAll $ object
-  gs <- forAll $ gameStatus (Set.fromList itms) (locations (R.linear 1 1) Nothing Nothing (justGenSet [obj]) Nothing Nothing Nothing Nothing)
+  gs <- forAll $ gameStatus (Set.fromList itms) (locations (R.linear 1 1) Nothing Nothing (justMonSet [obj]) Nothing Nothing Nothing Nothing)
   (S.evalState (G.handleCommand (C.ItemsOnObject allItems obj)) gs)
     ===
       ("You don't have these items: " ++ (show $ LO.sort itemsMiss))
@@ -29,7 +31,7 @@ prop_handleCommandItemsOnObjectNoAction :: Property
 prop_handleCommandItemsOnObjectNoAction = property $ do
   itms <- forAll $ Set.fromList <$> items (R.linear 1 5)
   obj <- forAll $ object
-  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (justGenSet [obj]) Nothing Nothing Nothing Nothing)
+  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (justMonSet [obj]) Nothing Nothing Nothing Nothing)
   (S.evalState (G.handleCommand (C.ItemsOnObject itms obj)) gs)
     ===
       ("I can't do it.")
@@ -38,7 +40,8 @@ prop_handleCommandItemsOnObjectActionApplied :: Property
 prop_handleCommandItemsOnObjectActionApplied = property $ do
   itms <- forAll $ Set.fromList <$> items (R.linear 1 5)
   obj <- forAll $ object
-  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (justGenSet [obj]) Nothing Nothing Nothing Nothing)
+  act <- forAll $ actionUseItemsOnObject (Just $ Gen.shuffleS itms) (justMon obj) Nothing (justMon [])
+  gs <- forAll $ gameStatus itms (locations (R.linear 1 1) Nothing Nothing (justMonSet [obj]) Nothing (justMon [act]) Nothing Nothing)
   (S.evalState (G.handleCommand (C.ItemsOnObject itms obj)) gs)
     ===
-      ("I can't do it.")
+      G.aComment act

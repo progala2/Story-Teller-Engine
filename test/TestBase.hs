@@ -5,6 +5,7 @@ import           Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 import           Data.List
+import qualified Data.Set as Set
 
 strings :: MonadGen m => Range.Range Int -> Range.Range Int -> m a -> m [[a]]
 strings r1 r2 g = Gen.list r1 (Gen.list r2 g)
@@ -23,3 +24,6 @@ sentenceSp (sp1, sp2) (w1, w2) (s1, s2) = do
   foldl' fld (Gen.list (Range.linear w1 w2) Gen.alpha) [1..nr]
   where
     fld a _ = a <> spaces (sp1, sp2) <> (Gen.list (Range.linear w1 w2) Gen.alpha)
+
+shuffleS :: (Monad m, Ord a) => Set.Set a -> GenT m (Set.Set a)
+shuffleS a = Set.fromList <$> Gen.shuffle (Set.toList a) 
