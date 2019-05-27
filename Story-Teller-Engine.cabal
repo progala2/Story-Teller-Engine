@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5364ebcd43ae508eecabea6b0fd4585458a90fa59cfa55d84cab7759b962abea
+-- hash: e9684edb93869964b282583f8f004ca99b03a6294f106ca9b640c38bd38c78bf
 
 name:           Story-Teller-Engine
 version:        0.6.0.0
@@ -30,6 +30,7 @@ library
       Extensions.Errors
       Extensions.Monad
       Extensions.Parsec
+      Game.Command
       Game.CommandParser
       Game.Runner
       Game.Types

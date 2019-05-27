@@ -3,7 +3,8 @@ module Game.Types where
 import qualified Control.Monad.State.Strict as S
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
-
+import           Data.List
+import           Data.Foldable (foldlM)
 
 data CondType = CondLocal | CondGlobal deriving(Show)
 data LocDesc = LocDesc String | LocDescCond CondType CondId String deriving(Show)
@@ -76,7 +77,9 @@ data GameOptions = GameOptions {
     goGameVersion::String, 
     goPlayerCapacity::Int,
     goEndingLocation::LocName,
-    goConditions::Conditions
+    goConditions::Conditions,
+    goIntro::String,
+    goOutro::String
     } deriving(Show)
 type WorldStatus = (GameOptions, Locations)
 type GameStatus = (PlayerStatus, WorldStatus)
@@ -96,3 +99,38 @@ getPlayerStatus = do
 
 itemSetFromList :: [String] -> ItemSet
 itemSetFromList = Set.fromList . (Item <$>)
+
+showDescription :: Monad m => GameStateM m String
+showDescription = do 
+  (PlayerStatus (_, l) _) <- getPlayerStatus 
+  descL <- foldlM desc [] $ M.elems (lcDescList l)
+  return $ foldl' sepByLn [] descL
+  where
+    desc ss (LocDesc str) = return $ str:ss
+    desc ss (LocDescCond ct cid str) = checkConditionWith (ct, cid) (str:ss) ss
+
+
+checkConditionWith :: Monad m => (CondType, CondId) -> a -> a -> GameStateM m a
+checkConditionWith p t f = checkCondition p >>= (\c -> return $ if c then t else f)
+
+checkConditionWithM :: Monad m => (CondType, CondId) -> GameStateM m a -> GameStateM m a -> GameStateM m a
+checkConditionWithM p t f = checkCondition p >>= (\c -> if c then t else f)
+
+checkCondition :: Monad m => (CondType, CondId) -> GameStateM m Bool
+checkCondition (ct, cid) = do
+  (PlayerStatus (_, loc) plItems, (go, _)) <- S.get
+  case ct of
+    CondLocal -> condition plItems loc $ lcCondition loc cid
+    CondGlobal -> condition plItems loc $ goCondition go cid
+    where 
+      condition plItems loc (Condition objs items plIts) = return $ not (any objCond objs) && all itemLocCond items && all itemPlCond plIts
+        where 
+          objCond obj = Set.member obj (lcObjects loc)
+          itemLocCond item = Set.member item (lcItems loc)
+          itemPlCond item = Set.member item plItems
+
+sepByLn :: String -> String -> String
+sepByLn = sepBy "\n" (++)
+
+sepBy :: a -> (a -> a -> a) -> a -> a -> a
+sepBy s f a b = a `f` s `f` b

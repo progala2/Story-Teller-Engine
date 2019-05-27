@@ -1,12 +1,10 @@
 module Parser.Game.Location.Action where
 
 import Parser.Errors
-import Extensions.Monad
 import Data.Either
 import qualified Game.Types as G
 import qualified Parser.Text.Tokens as T
 import qualified Parser.Text.Option as T
-import qualified Data.Set as Set
 
 action :: T.Action -> Either LoaderError G.Action
 action act = case T.sGet act T.AotType of

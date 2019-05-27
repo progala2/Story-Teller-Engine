@@ -9,8 +9,8 @@ readCond :: CharParser () Ge.CondType
 readCond = readCondN "Condition" 
 
 readCondN :: String -> CharParser () Ge.CondType
-readCondN str = do 
-    skipOptionName str
+readCondN name = do 
+    skipOptionName name
     str <- choice [string "Local", string "Global"] <?> "Wrong condition type."
     whiteSpaces
     i <- readInt

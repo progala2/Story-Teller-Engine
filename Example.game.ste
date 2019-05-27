@@ -6,13 +6,16 @@
         Game Version = "1"
         Player Capacity = 5
         Starting Location = "House"
-        Ending Location = "Outside"
         Ending Location = "Makarena"
+        Ending Location = "Outside"
     />
 
     <Intro
 
-        Text = "This is a Demo game."
+        Text = "This is a Demo game.
+Try to finish it.
+Your goal is to go out from the house.
+Good luck!"
 
     />
     <Locations

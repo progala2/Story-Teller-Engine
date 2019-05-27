@@ -17,7 +17,7 @@ import Parser.Errors
 loadGame::String -> Either LoaderError G.GameStatus
 loadGame = (either (Left . show) tokensToGame) . parseGameFile 
   where 
-    tokensToGame (go, conds, locs) = do 
+    tokensToGame (go, conds, locs, (intro, outro)) = do 
       ws@(_, glocs) <- worldStatus
       (,) <$> playerStatus glocs <.> ws
       where
@@ -35,6 +35,8 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                 <*> playerCapacity
                 <*> endingLocation
                 <.> conditionsLoader conds
+                <.> intro
+                <.> outro
               where
                 gameName = T.sGet go T.GameName
                 gameVersion = T.sGet go T.GameVersion

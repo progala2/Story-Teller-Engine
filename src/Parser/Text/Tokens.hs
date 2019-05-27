@@ -3,6 +3,9 @@ module Parser.Text.Tokens where
 import qualified Data.Map.Strict as M
 import Parser.Text.Option
 
+type IntroText = String
+type OutroText = String
+
 data GameOptionType = GameName | GameVersion | PlayerCapacity 
     | StartingLocation | EndingLocation deriving (Show, Eq, Ord)
 data GameOption = GameOptionString String | GameOptionInt Int deriving(Show)  

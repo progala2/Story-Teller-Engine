@@ -9,23 +9,24 @@ import Parser.Text.Language
 import Parser.Text.Location
 import Parser.Text.Condition
 
-parseGameFile :: String -> Either ParseError (T.GameOptions, T.Conditions, T.Locations)
+type ParsingResult = (T.GameOptions, T.Conditions, T.Locations, (T.IntroText, T.OutroText))
+parseGameFile :: String -> Either ParseError ParsingResult
 parseGameFile str = parse gameFile "(unknown)" str
 
-gameFile :: CharParser () (T.GameOptions, T.Conditions, T.Locations)
+gameFile :: CharParser () ParsingResult
 gameFile = do 
     gameBeginToken
     go <- headersSection
     spaces
-    _ <- section "Intro" (many (noneOf "/>"))
+    intro <- section "Intro" (readOption "Text")
     spaces
     locations <- locationsSection
     spaces
     conds <- readCondsSection
     spaces
-    _ <- section "Outro" (many (noneOf "/>"))
+    outro <- section "Outro" (readOption "Text")
     spaces
-    return (go, conds, locations)
+    return (go, conds, locations, (intro, outro))
 
 headersSection :: CharParser () T.GameOptions
 headersSection = do
