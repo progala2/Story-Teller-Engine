@@ -6,7 +6,7 @@ import Extensions.Monad
 import qualified Data.Set as Set
 
 data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | UniqueCommand String (Maybe G.Object) | CheckBp | PickUpItem G.Item | ThrowItem G.Item 
- | ExitGame deriving(Show)
+ | ExitGame | ExitAndSave deriving(Show)
 
 parseCommand :: String -> Either ParseError Command
 parseCommand str = parse command "command" str
@@ -18,6 +18,7 @@ command = choice [
     tryE (checkBpS *> return CheckBp),
     PickUpItem . G.Item <$> tryE (pickUpItemS *> stringSpaces),
     tryE (exitGameS *> return ExitGame),
+    tryE (exitAndSaveS *> return ExitAndSave),
     uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter <* many1 (char ' ') <* string "on" <* spaces) <*> (Just . G.Object <$> stringSpaces)),
     uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter <* many1 (char ' ')) <*> (Just . G.Object <$> stringSpaces)),
     uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter) <.> Nothing) 
@@ -39,6 +40,8 @@ pickUpItemS :: CharParser () String
 pickUpItemS = choiceString ["pick up ", "pup "]
 exitGameS :: CharParser () String
 exitGameS = choiceString [":exit", ":q"]
+exitAndSaveS :: CharParser () String
+exitAndSaveS = choiceString [":exitSave", ":qs"]
 
 choiceString :: [String] -> CharParser () String
 choiceString [] = error "Can't be empty!"

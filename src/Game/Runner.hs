@@ -10,10 +10,10 @@ import           Data.Foldable (foldlM)
 import           Control.Concurrent (threadDelay)
 import           Data.Functor.Identity (Identity(..))
 
-runGame :: GameStateIO ()
-runGame = do
+runGame :: Bool -> GameStateIO ()
+runGame b = do
   (_, (go, _)) <- S.get
-  S.lift $ introLn go
+  if b then S.lift $ introLn go else return ()
   gameLoop
     where
       introLn go = do
@@ -43,7 +43,11 @@ runGame = do
               "y" -> return (True, gs)
               "n" -> return (False, gs)
               _ -> quitGameWo
-          quitGameSave = error "Not implemented yet."
+          quitGameSave = do 
+            putStrLn "Give save name:"
+            answer <- getLine
+            writeFile (answer ++ ".save.ste") (show gs)
+            return (True, gs)
 
 putStrLnL :: String -> GameStateIO ()
 putStrLnL str = S.lift $ putStrLn str

@@ -70,6 +70,8 @@ handleCommand (ThrowItem it) = do
 
 handleCommand ExitGame = S.lift $ Left QuitGame
 
+handleCommand ExitAndSave = S.lift $ Left QuitAndSave
+
 canApply :: Monad m => (Action -> Bool) -> Location -> GameStateM m String
 canApply f currLoc = case find f (lcActions currLoc) of
   Just (ActionUnique _ _ com ress) -> 

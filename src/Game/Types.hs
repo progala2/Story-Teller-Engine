@@ -6,18 +6,18 @@ import qualified Data.Set as Set
 import           Data.List
 import           Data.Foldable (foldlM)
 
-data CondType = CondLocal | CondGlobal deriving(Show)
-data LocDesc = LocDesc String | LocDescCond CondType CondId String deriving(Show)
-newtype CondId = CondId Int deriving(Show, Eq, Ord)
-newtype DescOrder = DescOrder Int deriving(Show, Eq, Ord)
+data CondType = CondLocal | CondGlobal deriving(Show, Read)
+data LocDesc = LocDesc String | LocDescCond CondType CondId String deriving(Show, Read)
+newtype CondId = CondId Int deriving(Show, Eq, Ord, Read)
+newtype DescOrder = DescOrder Int deriving(Show, Eq, Ord, Read)
 type ObjectsNotExist = [Object]
 type ItemsInLocation = [Item]
 type PlayerItems = [Item]
 
 type Conditions = (M.Map CondId Condition)
-data Condition = Condition ObjectsNotExist ItemsInLocation PlayerItems deriving(Show)
+data Condition = Condition ObjectsNotExist ItemsInLocation PlayerItems deriving(Show, Read)
 
-data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show)
+data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show, Read)
 data Action = 
   ActionUseItemsOnObject { 
     aItemsUsed::ItemSet,
@@ -31,11 +31,11 @@ data Action =
     aObjectM::Maybe Object,
     aComment::String,
     aResults::[ActionResult]
-  } deriving(Show)
+  } deriving(Show, Read)
 type Actions = [Action]
 
-data LocCanTravel = LocCannotTravel CondType CondId String | LocCanTravel deriving(Show)
-newtype LocName = LocName String deriving(Eq, Ord, Show)
+data LocCanTravel = LocCannotTravel CondType CondId String | LocCanTravel deriving(Show, Read)
+newtype LocName = LocName String deriving(Eq, Ord, Show, Read)
 data Location = Location {
     lcDescList::(M.Map DescOrder LocDesc), 
     lcTravelList::(M.Map LocName LocCanTravel), 
@@ -43,7 +43,7 @@ data Location = Location {
     lcItems::ItemSet, 
     lcActions::Actions,
     lcConditions::Conditions
-    } deriving(Show)
+    } deriving(Show, Read)
 type LocationP = (LocName, Location)
 type Locations = M.Map LocName Location
 type DescMap = (M.Map DescOrder LocDesc)
@@ -66,12 +66,12 @@ lcCondition l cid = lcConditions l M.! cid
 goCondition :: GameOptions -> CondId -> Condition
 goCondition l cid = goConditions l M.! cid
 
-newtype Item = Item String deriving(Eq, Ord, Show)
-newtype Object = Object String deriving(Eq, Ord, Show)
+newtype Item = Item String deriving(Eq, Ord, Show, Read)
+newtype Object = Object String deriving(Eq, Ord, Show, Read)
 type ItemSet = Set.Set Item
 type ObjectSet = Set.Set Object
 
-data PlayerStatus = PlayerStatus LocationP ItemSet deriving(Show)
+data PlayerStatus = PlayerStatus LocationP ItemSet deriving(Show, Read)
 data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 
@@ -80,7 +80,7 @@ data GameOptions = GameOptions {
     goConditions::Conditions,
     goIntro::String,
     goOutro::String
-    } deriving(Show)
+    } deriving(Show, Read)
 type WorldStatus = (GameOptions, Locations)
 type GameStatus = (PlayerStatus, WorldStatus)
 
