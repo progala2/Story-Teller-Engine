@@ -4,6 +4,7 @@ import           Game.CommandParser
 import qualified Control.Monad.State.Strict as S
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
+import           Data.Maybe (maybeToList)
 import           Game.Types
 import           Data.List
 import qualified Data.List.Ordered as LO
@@ -27,15 +28,11 @@ handleCommand (Travel dest) = do
         (LocCannotTravel ct cid str) -> checkConditionWithM (ct, cid) (travel (dest, destLoc)) (return str)
 
 handleCommand (ItemsOnObject items obj) = do
-  (PlayerStatus currLoc plItems, _) <- S.get
+  (PlayerStatus (_, currLoc) plItems, _) <- S.get
   case hasNotItems items plItems of
     Right _ ->
-      case hasNotItems [obj] (lcObjects $ snd currLoc) of
-        Right _ ->
-          case find canApplyItemsOnObject (lcActions $ snd currLoc) of
-            Just (ActionUseItemsOnObject _ _ com ress) -> 
-              mapM_ applyActionResults ress >> return com
-            _ -> return "I can't do it."
+      case hasNotItems [obj] (lcObjects currLoc) of
+        Right _ -> canApply canApplyItemsOnObject currLoc
         _ -> return "There is no object like that!"
     Left is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
   where 
@@ -43,6 +40,17 @@ handleCommand (ItemsOnObject items obj) = do
       | Set.difference aItms items == Set.empty && aObj == obj = True
       | otherwise = False
     canApplyItemsOnObject _ = False
+
+handleCommand (UniqueCommand comm obj) = do
+  (PlayerStatus (_, currLoc) _, _) <- S.get
+  case hasNotItems (maybeToList obj) (lcObjects currLoc) of
+    Right _ -> canApply canApplyUniqeCommand currLoc
+    _ -> return "There is no object like that!"
+  where 
+    canApplyUniqeCommand(ActionUnique aComm aObj _ _) 
+      | elem comm aComm && aObj == obj = True
+      | otherwise = False
+    canApplyUniqeCommand _ = False
 
 handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl' sepByLn [] (show <$> Set.toList items))
 
@@ -62,6 +70,11 @@ handleCommand (ThrowItem it) = do
 
 handleCommand ExitGame = S.lift $ Left QuitGame
 
+canApply :: Monad m => (Action -> Bool) -> Location -> GameStateM m String
+canApply f currLoc = case find f (lcActions currLoc) of
+  Just (ActionUnique _ _ com ress) -> 
+    mapM_ applyActionResults ress >> return com
+  _ -> return "I can't do it."
 
 travel :: Monad m => LocationP -> GameStateM m String
 travel destLoc = do

@@ -5,7 +5,7 @@ import qualified Game.Types as G
 import Extensions.Monad
 import qualified Data.Set as Set
 
-data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item 
+data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | UniqueCommand String (Maybe G.Object) | CheckBp | PickUpItem G.Item | ThrowItem G.Item 
  | ExitGame deriving(Show)
 
 parseCommand :: String -> Either ParseError Command
@@ -17,25 +17,28 @@ command = choice [
     uncurry ItemsOnObject <$> tryE itemsOnObject,
     tryE (checkBpS *> return CheckBp),
     PickUpItem . G.Item <$> tryE (pickUpItemS *> stringSpaces),
-    tryE (exitGameS *> return ExitGame)
+    tryE (exitGameS *> return ExitGame),
+    uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter <* many1 (char ' ') <* string "on" <* spaces) <*> (Just . G.Object <$> stringSpaces)),
+    uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter <* many1 (char ' ')) <*> (Just . G.Object <$> stringSpaces)),
+    uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter) <.> Nothing) 
     ] <?> "I don't understand..."
   where
     tryE f = try (f <* endCheck)
     endCheck = spaces *> eof
     itemsOnObject = (,) 
-      <$> (Set.fromList <$> G.Item <$$> (itemsOnObjectS *> between (spaces *> string "'" <* spaces) (spaces *> string "'"<* spaces) (sepEndBy1 stringSpaces (try (spaces *> char ',' <* spaces))) <* (spaces *> string "on ")))
+      <$> (G.itemSetFromList <$> (itemsOnObjectS *> between singleQuotaSpace singleQuotaSpace (sepEndBy1 stringSpaces (try (btwnSpaces $ char ','))) <* (spaces *> string "on ")))
       <*> (G.Object <$> stringSpaces)
 
 gotoS :: CharParser () String
-gotoS = choiceString ["go to ", "travel to ", "move to "]
+gotoS = choiceString ["go to ", "travel to ", "move to ", "gt "]
 itemsOnObjectS :: CharParser () String
-itemsOnObjectS = choiceString ["use items "]
+itemsOnObjectS = choiceString ["use items ", "ui "]
 checkBpS :: CharParser () String
-checkBpS = choiceString ["check bp", "check backpack"]
+checkBpS = choiceString ["check bp", "check backpack", "cbp"]
 pickUpItemS :: CharParser () String
 pickUpItemS = choiceString ["pick up ", "pup "]
 exitGameS :: CharParser () String
-exitGameS = choiceString [":exit", ":quit"]
+exitGameS = choiceString [":exit", ":q"]
 
 choiceString :: [String] -> CharParser () String
 choiceString [] = error "Can't be empty!"
@@ -43,3 +46,6 @@ choiceString elems = choice $ (try . string) <$> elems
 
 stringSpaces :: CharParser () String
 stringSpaces = many1 letter <> (concat <$> many (try (many1 (char ' ') <> many1 letter) ))
+
+singleQuotaSpace :: CharParser () String
+singleQuotaSpace = btwnSpaces $ string "'"

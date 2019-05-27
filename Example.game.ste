@@ -55,7 +55,7 @@ Good luck!"
                 />
                 <Action
                     Type = "Unique"
-                    Commands = "Kick"
+                    Commands = "kick"
                     Used On = "Door"
                     Comment = "Door is solid, your legs are weak... Nothing happens." 
                 />
@@ -87,7 +87,7 @@ Good luck!"
             <Actions
                 <Action
                     Type = "Unique"
-                    Commands = "Clean" "Tidy"
+                    Commands = "clean" "tidy"
                     Comment = "Your basement is shining!" 
                 />
             />

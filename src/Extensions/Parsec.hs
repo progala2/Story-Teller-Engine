@@ -22,3 +22,6 @@ eol = try (string "\n\r")
 
 eol' :: CharParser () ()
 eol' = eol >> return ()
+
+btwnSpaces :: CharParser () a -> CharParser () a
+btwnSpaces f = spaces *> f <* spaces

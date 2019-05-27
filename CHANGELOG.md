@@ -1,5 +1,10 @@
 # Changelog for Story-Teller-Engine
 
+## 0.7.0.0
+
+- uniqueCommands
+- intro, outro and ending logic
+
 ## 0.6.0.6
 
 - main menu
