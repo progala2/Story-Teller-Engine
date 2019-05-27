@@ -16,7 +16,7 @@ action act = case T.sGet act T.AotType of
     Left str -> Left str
     where
       useItemsOnObject = G.ActionUseItemsOnObject 
-        <$> (Set.fromList <$> G.Item <$$> T.saGet act T.AotUsedItems) 
+        <$> (G.itemSetFromList <$> T.saGet act T.AotUsedItems) 
         <*> (G.Object <$> T.sGet act T.AotUsedOn)
         <*> T.sGet act T.AotComment
         <*> Right results

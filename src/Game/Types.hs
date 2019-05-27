@@ -1,6 +1,6 @@
 module Game.Types where
 
-import qualified Control.Monad.State.Lazy as S
+import qualified Control.Monad.State.Strict as S
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 
@@ -11,9 +11,10 @@ newtype CondId = CondId Int deriving(Show, Eq, Ord)
 newtype DescOrder = DescOrder Int deriving(Show, Eq, Ord)
 type ObjectsNotExist = [Object]
 type ItemsInLocation = [Item]
+type PlayerItems = [Item]
 
 type Conditions = (M.Map CondId Condition)
-data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
+data Condition = Condition ObjectsNotExist ItemsInLocation PlayerItems deriving(Show)
 
 data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show)
 data Action = 
@@ -61,6 +62,8 @@ itemExists it (_, loc) = it `Set.member` lcItems loc
 
 lcCondition :: Location -> CondId -> Condition
 lcCondition l cid = lcConditions l M.! cid
+goCondition :: GameOptions -> CondId -> Condition
+goCondition l cid = goConditions l M.! cid
 
 newtype Item = Item String deriving(Eq, Ord, Show)
 newtype Object = Object String deriving(Eq, Ord, Show)
@@ -72,7 +75,8 @@ data GameOptions = GameOptions {
     goGameName::String, 
     goGameVersion::String, 
     goPlayerCapacity::Int,
-    goEndingLocation::LocName
+    goEndingLocation::LocName,
+    goConditions::Conditions
     } deriving(Show)
 type WorldStatus = (GameOptions, Locations)
 type GameStatus = (PlayerStatus, WorldStatus)
@@ -81,7 +85,14 @@ type GameStateIO a = S.StateT GameStatus IO a
 type GameState a = S.State GameStatus a
 type GameStateM m a = S.StateT GameStatus m a
 
-getLocations :: GameState (LocationP, Locations)
+getLocations :: Monad m => GameStateM m (LocationP, Locations)
 getLocations = do
   (PlayerStatus currLoc _, (_, locations)) <- S.get
   return (currLoc, locations)
+getPlayerStatus :: Monad m => GameStateM m PlayerStatus
+getPlayerStatus = do
+  (ps, _) <- S.get
+  return ps
+
+itemSetFromList :: [String] -> ItemSet
+itemSetFromList = Set.fromList . (Item <$>)

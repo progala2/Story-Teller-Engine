@@ -17,7 +17,7 @@ import Parser.Errors
 loadGame::String -> Either LoaderError G.GameStatus
 loadGame = (either (Left . show) tokensToGame) . parseGameFile 
   where 
-    tokensToGame (go, locs) = do 
+    tokensToGame (go, conds, locs) = do 
       ws@(_, glocs) <- worldStatus
       (,) <$> playerStatus glocs <.> ws
       where
@@ -34,6 +34,7 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                 <*> gameVersion 
                 <*> playerCapacity
                 <*> endingLocation
+                <.> conditionsLoader conds
               where
                 gameName = T.sGet go T.GameName
                 gameVersion = T.sGet go T.GameVersion
@@ -45,10 +46,10 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                 location (locK, locOpts) = (,) (G.LocName locK) 
                   <$> (G.Location descList 
                     <$> locTravelList 
-                    <*> Right locObjects 
-                    <*> Right locItems 
+                    <.> locObjects 
+                    <.> locItems 
                     <*> locActions 
-                    <*> Right locCond)
+                    <.> E.fromRight M.empty (T.tGet locOpts T.LocCond (\ (T.LocCondV a) -> conditionsLoader a)))
                   where
                     descList = E.fromRight M.empty $ T.tGet locOpts T.LocDescList mapDescMap
                       where
@@ -70,7 +71,3 @@ loadGame = (either (Left . show) tokensToGame) . parseGameFile
                       where
                         actions (T.LocActionsV act) = map action act 
                         actions _ = errCant
-                    locCond = E.fromRight M.empty $ T.tGet locOpts T.LocCond conds
-                      where
-                        conds (T.LocCondV cond) = M.fromList (condition <$> M.toList cond)
-                        conds _ = errCant

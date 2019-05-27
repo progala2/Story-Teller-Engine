@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 81e945306d358f5c2038e98b5768b6ea953bd85466ec39e7a8673a520f7c82ec
+-- hash: 3ac7441f98b04383123bc3c65cf4daa71f555d3ad081c44d6c4ec06d76ca03ae
 
 name:           Story-Teller-Engine
-version:        0.4.3.0
+version:        0.5.0.0
 description:    Please see the README on GitHub at <https://github.com/progala2/Story-Teller-Engine/blob/master/README.md>
 homepage:       https://github.com/progala2/Story-Teller-Engine#readme
 bug-reports:    https://github.com/progala2/Story-Teller-Engine/issues

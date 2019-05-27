@@ -19,9 +19,10 @@ data ActionOptionType = AotType | AotUsedItems | AotUsedOn
     | AotCommands deriving(Show, Eq, Ord)
 data ActionOption = AoArrString [String] | AoString String deriving(Show)
 
-type ObjectsNotExist = [String] 
-type ItemsInLocation = [String] 
-data Condition = Condition ObjectsNotExist ItemsInLocation deriving(Show)
+type Condition = M.Map ConditionOptionType ConditionOption
+type Conditions = M.Map Int Condition
+data ConditionOptionType = CotObjectsNotExist | CotItemsInLocation | CotPlayerItems deriving(Show, Eq, Ord) 
+data ConditionOption = CoArrString [String] deriving(Show)
 
 type LocNameStr = String
 data LocationOptionType = LocDescList | LocTravelList 
@@ -47,7 +48,10 @@ instance OptionStr ActionOption where
 instance OptionArrStr ActionOption where
     getArrStrM (AoArrString str) = Just str
     getArrStrM _ = Nothing
-
+    
+instance OptionArrStr ConditionOption where
+    getArrStrM (CoArrString str) = Just str
+    
 instance OptionArrStr LocationOption where
     getArrStrM (LocStrings str) = Just str
     getArrStrM _ = Nothing

@@ -4,7 +4,7 @@ module MainMenu
 where
 --import System.IO.Error
 import System.IO
-import qualified Control.Monad.State.Lazy as S
+import qualified Control.Monad.State.Strict as S
 import Game.Runner
 import Parser.Loader
 import Parser.Text.Parser

@@ -7,11 +7,12 @@ import qualified Data.Map.Strict as M
 import qualified Parser.Text.Tokens as T
 import Parser.Text.Language
 import Parser.Text.Location
+import Parser.Text.Condition
 
-parseGameFile :: String -> Either ParseError (T.GameOptions, T.Locations)
+parseGameFile :: String -> Either ParseError (T.GameOptions, T.Conditions, T.Locations)
 parseGameFile str = parse gameFile "(unknown)" str
 
-gameFile :: CharParser () (T.GameOptions, T.Locations)
+gameFile :: CharParser () (T.GameOptions, T.Conditions, T.Locations)
 gameFile = do 
     gameBeginToken
     go <- headersSection
@@ -20,8 +21,11 @@ gameFile = do
     spaces
     locations <- locationsSection
     spaces
-    _ <- many anyChar
-    return (go, locations)
+    conds <- readCondsSection
+    spaces
+    _ <- section "Outro" (many (noneOf "/>"))
+    spaces
+    return (go, conds, locations)
 
 headersSection :: CharParser () T.GameOptions
 headersSection = do

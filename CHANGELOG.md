@@ -1,5 +1,10 @@
 # Changelog for Story-Teller-Engine
 
+## 0.5.0.0
+
+- all games logic finished!
+  - player items condition
+  - global conditions
 ## 0.4.3.0
 
 - picking up items

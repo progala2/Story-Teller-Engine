@@ -103,6 +103,12 @@
             Travel Locations = "House"
         />
     />
+    <Conditions
+        <Condition
+            Id = 0
+            Player Items = "Wood"
+        />
+    />
     <Outro
         Text = "You win!"
     />

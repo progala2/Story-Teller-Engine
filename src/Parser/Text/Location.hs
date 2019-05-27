@@ -19,9 +19,9 @@ locationSection = do
             (Ge.LocTravelList, Ge.LocTravelListV <$> readLocTravelList),
             (Ge.LocItems, Ge.LocStrings <$> (inlineSection "Items")),
             (Ge.LocObjects, Ge.LocStrings <$> (inlineSection "Objects")),
-            (Ge.LocActions, Ge.LocActionsV <$> (readLocActionList)),
-            (Ge.LocCond, Ge.LocCondV <$> (readLocCondList))
-            ]  <?> "Not acceptable header option."
+            (Ge.LocActions, Ge.LocActionsV <$> readLocActionList),
+            (Ge.LocCond, Ge.LocCondV <$> readCondsSection)
+            ]  <?> "Not acceptable location option."
         readLocTravelList = M.fromList <$> choice [try (sectionMany "Travel Locations" locTravelsParser),
             ( (`tupple` Ge.LocCanTravel) <$> ) <$> inlineSection "Travel Locations"]
           where
@@ -53,11 +53,3 @@ locationSection = do
               (Ge.AotObjectsRemove, Ge.AoArrString <$> (inlineSection "Objects Remove")),
               (Ge.AotCommands, Ge.AoArrString <$> (inlineSection "Commands"))
               ] <?> "Not acceptable action option."
-        
-        readLocCondList = M.fromList <$> sectionMany "Conditions" locCondsParser
-          where
-            locCondsParser = sectionWithKey "Condition" locCondParser (readOptionInt "Id")
-            locCondParser = do
-                items <- option [] (try $ inlineSection "Items Location")
-                objRem <- option [] (try $ inlineSection "Objects Not Exist")
-                return $ Ge.Condition objRem items
