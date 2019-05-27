@@ -2,24 +2,48 @@ module MainMenu
     ( mainMenu
     ) 
 where
---import System.IO.Error
-import System.IO
+import qualified System.IO.Error as Er
+import           System.IO
 import qualified Control.Monad.State.Strict as S
-import Game.Runner
-import Parser.Loader
-import Parser.Text.Parser
---import Data.Either
+import           Game.Runner
+import           Parser.Loader
+import           Parser.Text.Parser
+import           System.Console.ANSI
 
 mainMenu :: IO ()
 mainMenu = do 
-    putStrLn "Give the game name:"
-    gameName <- getLine
-    h <- openFile (gameName ++ ".game.ste") ReadMode
-    str <- hGetContents h
-    print $ parseGameFile str
-    print $ loadGame str
-    either (print) (S.evalStateT runGame) (loadGame str)
-    hClose h
-      ----  where
-      --    withFile' fp = withFile fp ReadMode (\h -> Just <$> hGetContents h)
-      --    errHandler _ = return Nothing
+    putStrLn "Welcome to the Story teller engine!"
+    putStrLn "Chose number: "
+    putStrLn "1. new game"
+    putStrLn "2. load game"
+    putStrLn "3. exit game"
+    menuOption <- getLine
+    case menuOption of
+        "1" -> clearScreen >> newGame >> mainMenu
+        "2" -> clearScreen >> savedGame >> mainMenu
+        "3" -> putStrLn "Farewell!"
+        _ -> mainMenu
+    where
+      newGame = do
+        putStrLn "Give the game name:"
+        gameName <- getLine
+        h <- Er.tryIOError (openFile (gameName ++ ".game.ste") ReadMode)
+        case h of
+          Right hh -> newGameParse hh
+          Left e -> do 
+            printError $ Er.ioeGetErrorString e
+        where
+          newGameParse hh = do 
+            str <- hGetContents hh
+            case loadGame str of
+              Right s -> do 
+                hClose hh
+                return $ S.evalStateT runGame s
+                return ()
+              Left s -> hClose hh >> printError s >> newGame
+      printError str = do 
+        clearScreen 
+        setSGR [SetColor Foreground Vivid Red]
+        putStrLn $ str
+        setSGR [Reset]
+      savedGame = error "Not Implemented yet!"

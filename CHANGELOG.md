@@ -1,5 +1,9 @@
 # Changelog for Story-Teller-Engine
 
+## 0.6.0.6
+
+- main menu
+
 ## 0.5.0.0
 
 - all games logic finished!

@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3ac7441f98b04383123bc3c65cf4daa71f555d3ad081c44d6c4ec06d76ca03ae
+-- hash: 5364ebcd43ae508eecabea6b0fd4585458a90fa59cfa55d84cab7759b962abea
 
 name:           Story-Teller-Engine
-version:        0.5.0.0
+version:        0.6.0.0
 description:    Please see the README on GitHub at <https://github.com/progala2/Story-Teller-Engine/blob/master/README.md>
 homepage:       https://github.com/progala2/Story-Teller-Engine#readme
 bug-reports:    https://github.com/progala2/Story-Teller-Engine/issues
@@ -64,7 +64,7 @@ executable Story-Teller-Engine-exe
       Paths_Story_Teller_Engine
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Werror
   build-depends:
       Story-Teller-Engine
     , ansi-terminal
