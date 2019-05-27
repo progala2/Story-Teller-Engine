@@ -5,7 +5,8 @@ import qualified Game.Types as G
 import Extensions.Monad
 import qualified Data.Set as Set
 
-data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item deriving(Show)
+data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | CheckBp | PickUpItem G.Item | ThrowItem G.Item 
+ | ExitGame deriving(Show)
 
 parseCommand :: String -> Either ParseError Command
 parseCommand str = parse command "command" str
@@ -15,7 +16,8 @@ command = choice [
     Travel . G.LocName <$> tryE (gotoS *> stringSpaces),
     uncurry ItemsOnObject <$> tryE itemsOnObject,
     tryE (checkBpS *> return CheckBp),
-    PickUpItem . G.Item <$> tryE (pickUpItemS *> stringSpaces)
+    PickUpItem . G.Item <$> tryE (pickUpItemS *> stringSpaces),
+    tryE (exitGameS *> return ExitGame)
     ] <?> "I don't understand..."
   where
     tryE f = try (f <* endCheck)
@@ -32,6 +34,8 @@ checkBpS :: CharParser () String
 checkBpS = choiceString ["check bp", "check backpack"]
 pickUpItemS :: CharParser () String
 pickUpItemS = choiceString ["pick up ", "pup "]
+exitGameS :: CharParser () String
+exitGameS = choiceString [":exit", ":quit"]
 
 choiceString :: [String] -> CharParser () String
 choiceString [] = error "Can't be empty!"

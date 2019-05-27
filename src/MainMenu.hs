@@ -7,7 +7,6 @@ import           System.IO
 import qualified Control.Monad.State.Strict as S
 import           Game.Runner
 import           Parser.Loader
-import           Parser.Text.Parser
 import           System.Console.ANSI
 
 mainMenu :: IO ()
@@ -30,17 +29,15 @@ mainMenu = do
         h <- Er.tryIOError (openFile (gameName ++ ".game.ste") ReadMode)
         case h of
           Right hh -> newGameParse hh
-          Left e -> do 
-            printError $ Er.ioeGetErrorString e
+          Left e -> printError $ Er.ioeGetErrorString e
         where
           newGameParse hh = do 
             str <- hGetContents hh
             case loadGame str of
               Right s -> do 
                 hClose hh
-                return $ S.evalStateT runGame s
-                return ()
-              Left s -> hClose hh >> printError s >> newGame
+                S.evalStateT runGame s
+              Left s -> hClose hh >> printError s
       printError str = do 
         clearScreen 
         setSGR [SetColor Foreground Vivid Red]

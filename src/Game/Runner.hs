@@ -11,21 +11,38 @@ import qualified Data.List.Ordered as LO
 import Data.Functor.Identity (Identity(..))
 import Data.Foldable (foldlM)
 
+data ExitCode = QuitGame | QuitAndSave | PlayerWin deriving(Show)
+
 runGame :: GameStateIO ()
 runGame = gameLoop
       where
         gameLoop = do 
-          (ps@(PlayerStatus currLoc _), _) <- S.get
+          putStrLnL "test"
+          gs@(PlayerStatus currLoc _, _) <- S.get
           putStrLnL $ "Location: " ++ (show $ fst currLoc)
           showDescription >>= putStrLnL
           putStrLnL "What now? : "
           line <- S.lift $ getLine
           S.lift $ clearScreen
-          res <- liftT (either (\_ -> return "You wrote something wrong!") handleCommand (parseCommand line)) 
-          putStrLnL res
-          gameLoop
+          b <- S.mapStateT (quitGame gs) (handleCommandE line)
+          if b then return () else gameLoop
+        handleCommandE line = either (\_ -> return "You wrote something wrong!") handleCommand (parseCommand line)
+        quitGame _ (Right (a, s)) = putStrLn a >> return (False, s)
+        quitGame gs (Left c) = case c of
+          QuitGame -> quitGameWo
+          QuitAndSave -> quitGameSave
+          PlayerWin -> return (True, gs)
+          where
+            quitGameWo = do
+              putStrLn "Are you sure you want to quit this game without saving?(y/n)"
+              answer <- getLine
+              case answer of
+                "y" -> return (True, gs)
+                "n" -> return (False, gs)
+                _ -> quitGameWo
+            quitGameSave = error "Not implemented yet."
 
-handleCommand :: Command -> GameState String
+handleCommand :: Command -> GameStateM (Either ExitCode) String
 handleCommand (Travel dest) =
   downMb nothing travelCommand
   where
@@ -35,7 +52,6 @@ handleCommand (Travel dest) =
       (currLoc, locations) <- getLocations
       destLoc <- S.lift $ locations M.!? dest
       trvl <- S.lift $ lcTravelList (snd currLoc) M.!? dest
-      ps <- getPlayerStatus
       case trvl of
         LocCanTravel -> travel (dest, destLoc)
         (LocCannotTravel ct cid str) -> checkConditionWithM (ct, cid) (travel (dest, destLoc)) (return str)
@@ -74,6 +90,9 @@ handleCommand (ThrowItem it) = do
     then S.put (PlayerStatus (addItemsToLoc [it] currLoc) (Set.delete it plIt), ws) >> return "Item has been thrown away."
     else return "You don't have that item."
 
+handleCommand ExitGame = S.lift $ Left QuitGame
+
+
 travel :: Monad m => LocationP -> GameStateM m String
 travel destLoc = do
   (PlayerStatus currLoc plItems, (go, locs)) <- S.get
@@ -97,7 +116,7 @@ checkConditionWithM p t f = checkCondition p >>= (\c -> if c then t else f)
 
 checkCondition :: Monad m => (CondType, CondId) -> GameStateM m Bool
 checkCondition (ct, cid) = do
-  (PlayerStatus (_, loc) plItems, (go, locs)) <- S.get
+  (PlayerStatus (_, loc) plItems, (go, _)) <- S.get
   case ct of
     CondLocal -> condition plItems loc $ lcCondition loc cid
     CondGlobal -> condition plItems loc $ goCondition go cid
@@ -118,7 +137,7 @@ hasNotItems items plItems = foldl' (nCorrectItem) (Right ()) items
       then Left is
       else Left $ i:is
 
-applyActionResults :: ActionResult -> GameState ()
+applyActionResults :: Monad m => ActionResult -> GameStateM m ()
 applyActionResults (ArAddLocationItems aItms) = do
   (PlayerStatus currLoc plIt, ws) <- S.get
   S.put (PlayerStatus (addItemsToLoc aItms currLoc) plIt, ws)
@@ -137,17 +156,11 @@ sepBy s f a b = a `f` s `f` b
 liftT :: Monad m => S.StateT s Identity a -> S.StateT s m a
 liftT = S.mapStateT (\(Identity (a, s)) -> return (a, s))
 
---downStateFromE :: Monad m => S.StateT s (Either e) a -> S.StateT s Identity e
---downStateFromE f st = S.mapStateT mapper st
---  where
---    mapper (Left e) = lift (f e)
---    mapper (Right (a, s)) = return (a, s)
-
-downMb :: a -> S.StateT s Maybe a -> S.StateT s Identity a
+downMb :: a -> S.StateT s Maybe a -> S.StateT s (Either e) a
 downMb f st = S.get >>= (\ oldSt -> S.mapStateT (mapper oldSt) st)
   where
-    mapper oldSt Nothing = Identity (f, oldSt)
-    mapper _ (Just (a, s)) = Identity (a, s)
+    mapper oldSt Nothing = Right (f, oldSt)
+    mapper _ (Just (a, s)) = Right (a, s)
 
 insert2 ::Ord a => (a, b) -> M.Map a b -> M.Map a b
 insert2 (a, b) = M.insert a b
