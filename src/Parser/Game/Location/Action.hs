@@ -2,7 +2,7 @@ module Parser.Game.Location.Action where
 
 import Parser.Errors
 import Data.Either
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Parser.Text.Tokens as T
 import qualified Parser.Text.Option as T
 

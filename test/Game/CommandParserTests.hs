@@ -7,11 +7,10 @@ import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 import qualified TestBase as Gen
 import qualified Game.CommandParser as C
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Extensions.Parsec as C
 import qualified Data.Set as Set
 import qualified Data.Either as E
-import Game.Types
 import Data.List (intercalate)
 
 tests :: IO Bool

@@ -6,7 +6,7 @@ import qualified Data.Map.Strict as M
 import Parser.Text.Language
 import Parser.Text.Condition
 
-locationsSection :: CharParser () Ge.Locations
+locationsSection :: CharParser () Ge.LocMap
 locationsSection = M.fromList <$> sectionMany "Locations" (try locationSection)
 
 locationSection :: CharParser () (Ge.LocNameStr, Ge.Location)

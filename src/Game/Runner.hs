@@ -5,7 +5,7 @@ import           System.Console.ANSI
 import           Game.CommandParser
 import           System.IO
 import qualified Control.Monad.State.Strict as S
-import           Game.Types
+import           Game.GameState
 import           Data.Foldable (foldlM)
 import           Control.Concurrent (threadDelay)
 import           Data.Functor.Identity (Identity(..))

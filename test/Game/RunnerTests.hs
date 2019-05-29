@@ -6,7 +6,7 @@ import qualified TestBase as Gen
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as R
 import qualified Game.Runner as G
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Game.CommandParser as C
 import qualified Control.Monad.State.Lazy as S
 import qualified Data.Set as Set

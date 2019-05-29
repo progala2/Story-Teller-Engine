@@ -3,7 +3,7 @@ module Game.Builders where
 
 import           Hedgehog
 import qualified TestBase as Gen
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as R
 import qualified Data.Set as Set
@@ -36,7 +36,7 @@ locations :: Monad m =>
             MaybeGenT m G.Actions ->
             MaybeGenT m G.Conditions ->
             MaybeGenT m G.LocName ->
-            GenT m G.Locations
+            GenT m G.LocMap
 locations r 
     (defMM -> descList) 
     (defMM -> travelList) 
@@ -70,7 +70,7 @@ actionUseItemsOnObject
         <*> comm
         <*> ress
 
-gameStatus :: MonadGen m => Set.Set G.Item -> m G.Locations -> m G.GameStatus
+gameStatus :: MonadGen m => Set.Set G.Item -> m G.LocMap -> m G.GameStatus
 gameStatus itms loc = loc >>= (\l ->
      (,) (G.PlayerStatus (snd (M.elemAt 0 l)) itms) 
       <$> ((,) <$> gameOptions <.> l) )

@@ -34,7 +34,7 @@ data LocationOption = LocDescListV (M.Map Int LocDesc) | LocTravelListV (M.Map S
     | LocStrings [String] | LocActionsV [Action] | LocCondV (M.Map Int Condition) deriving(Show)
 
 type Location = M.Map LocationOptionType LocationOption
-type Locations = M.Map LocNameStr Location
+type LocMap = M.Map LocNameStr Location
 
 data DataType = IntType | StringType deriving(Show)
 

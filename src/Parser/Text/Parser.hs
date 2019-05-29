@@ -9,7 +9,7 @@ import Parser.Text.Language
 import Parser.Text.Location
 import Parser.Text.Condition
 
-type ParsingResult = (T.GameOptions, T.Conditions, T.Locations, (T.IntroText, T.OutroText))
+type ParsingResult = (T.GameOptions, T.Conditions, T.LocMap, (T.IntroText, T.OutroText))
 parseGameFile :: String -> Either ParseError ParsingResult
 parseGameFile str = parse gameFile "(unknown)" str
 

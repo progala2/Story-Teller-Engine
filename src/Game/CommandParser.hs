@@ -1,7 +1,7 @@
 module Game.CommandParser where
 
 import Extensions.Parsec
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import Extensions.Monad
 import qualified Data.Set as Set
 

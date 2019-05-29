@@ -1,6 +1,6 @@
 module Parser.Game.Condition where
 
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Parser.Text.Tokens as T
 import qualified Parser.Text.Option as T
 import qualified Data.Map.Strict as M

@@ -2,7 +2,7 @@ module Parser.Loader(loadGame) where
 
 import Extensions.Errors
 import Extensions.Monad
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import qualified Data.Either as E

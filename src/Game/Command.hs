@@ -5,7 +5,7 @@ import qualified Control.Monad.State.Strict as S
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import           Data.Maybe (maybeToList)
-import           Game.Types
+import           Game.GameState
 import           Data.List
 import qualified Data.List.Ordered as LO
 
@@ -52,7 +52,7 @@ handleCommand (UniqueCommand comm obj) = do
       | otherwise = False
     canApplyUniqeCommand _ = False
 
-handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ foldl' sepByLn [] (show <$> Set.toList items))
+handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ intercalate "\n" (show <$> Set.toList items))
 
 handleCommand (PickUpItem it) = do 
   (PlayerStatus currLoc plItems, ws@(go, _)) <- S.get

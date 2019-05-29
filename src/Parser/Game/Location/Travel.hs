@@ -1,7 +1,7 @@
 module Parser.Game.Location.Travel where
 
 import Extensions.Errors
-import qualified Game.Types as G
+import qualified Game.GameState as G
 import qualified Parser.Text.Tokens as T
 
 travel :: String -> (String, T.LocTravel) -> Either String (G.LocName, G.LocCanTravel)
