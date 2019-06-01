@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 -- |
 -- Module      : MainMenu
 -- Description : Handling Game Main Menu
@@ -37,7 +39,7 @@ mainMenu = do
       newGame = templGame "Give the game name:" ".game.ste" newGameParse
         where
           newGameParse hh str = do
-            res <- return $ loadGame str
+            !res <- return $ loadGame str
             hClose hh
             case res of
               Right s -> S.evalStateT (runGame True) s
@@ -45,7 +47,7 @@ mainMenu = do
       savedGame = templGame "Give the save name:" ".save.ste" savedGameParse
         where
           savedGameParse hh str = do
-            res <- return (readMaybe str::(Maybe GameStatus))
+            !res <- return (readMaybe str::(Maybe GameStatus))
             hClose hh 
             case res of
               Just s -> S.evalStateT (runGame False) s

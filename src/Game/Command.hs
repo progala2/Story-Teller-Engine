@@ -74,8 +74,8 @@ handleCommand ExitAndSave = S.lift $ Left QuitAndSave
 
 canApply :: Monad m => (Action -> Bool) -> Location -> GameStateM m String
 canApply f currLoc = case find f (lcActions currLoc) of
-  Just (ActionUnique _ _ com ress) -> 
-    mapM_ applyActionResults ress >> return com
+  Just act -> 
+    mapM_ applyActionResults (aResults act) >> return (aComment act)
   _ -> return "I can't do it."
 
 travel :: Monad m => LocationP -> GameStateM m String
