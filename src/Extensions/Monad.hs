@@ -1,6 +1,10 @@
-module Extensions.Monad where
+module Extensions.Monad(module Extensions.Monad, module Control.Monad) where
 
-import Extensions.Errors
+
+import qualified Control.Monad.State.Strict as S
+import           Control.Monad
+import           Extensions.Errors
+import           Data.Functor.Identity (Identity(..))
 
 takeJust :: Maybe a -> a
 takeJust (Just x) = x;
@@ -22,3 +26,13 @@ rightsIfAll rs = case foldl fldFunc ("", []) rs of
 infixl 4 <.>
 (<.>) :: (Applicative f) => f (a -> b) -> a -> f b
 f <.> a = f <*> pure a
+
+
+liftT :: Monad m => S.StateT s Identity a -> S.StateT s m a
+liftT = S.mapStateT (\(Identity (a, s)) -> return (a, s))
+
+ifdM :: Monad a => a () -> Bool -> a ()
+ifdM th b = if b then th else return ()
+
+ifdrM :: Monad a => a () -> Bool -> a ()
+ifdrM el = ifdM el . not

@@ -1,11 +1,13 @@
 module Game.CommandParser where
 
-import Extensions.Parsec
+import           Extensions.Parsec
 import qualified Game.GameState as G
-import Extensions.Monad
+import           Extensions.Monad
 import qualified Data.Set as Set
 
-data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object | UniqueCommand String (Maybe G.Object) | CheckBp | PickUpItem G.Item | ThrowItem G.Item 
+data Command = Travel G.LocName | ItemsOnObject (Set.Set G.Item) G.Object 
+ | UniqueCommand String (Maybe G.Object) 
+ | CheckBp | PickUpItem G.Item | ThrowItem G.Item 
  | ExitGame | ExitAndSave deriving(Show)
 
 parseCommand :: String -> Either ParseError Command
@@ -19,15 +21,15 @@ command = choice [
     PickUpItem . G.Item <$> tryE (pickUpItemS *> stringSpaces),
     tryE (exitGameS *> return ExitGame),
     tryE (exitAndSaveS *> return ExitAndSave),
-    uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter <* many1 (char ' ') <* string "on" <* spaces) <*> (Just . G.Object <$> stringSpaces)),
-    uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter <* many1 (char ' ')) <*> (Just . G.Object <$> stringSpaces)),
-    uncurry UniqueCommand <$> tryE ((,) <$> (many1 letter) <.> Nothing) 
+    uncurry UniqueCommand <$> tryE ((,) <$> (letters1 <* spacebs1 <* string "on" <* spacebs) <*> (Just . G.Object <$> stringSpaces)),
+    uncurry UniqueCommand <$> tryE ((,) <$> (letters1 <* spacebs1) <*> (Just . G.Object <$> stringSpaces)),
+    uncurry UniqueCommand <$> tryE ((,) <$> letters1 <.> Nothing) 
     ] <?> "I don't understand..."
   where
     tryE f = try (f <* endCheck)
-    endCheck = spaces *> eof
+    endCheck = spacebs *> eof
     itemsOnObject = (,) 
-      <$> (G.itemSetFromList <$> (itemsOnObjectS *> between singleQuotaSpace singleQuotaSpace (sepEndBy1 stringSpaces (try (btwnSpaces $ char ','))) <* (spaces *> string "on ")))
+      <$> (G.itemSetFromList <$> (itemsOnObjectS *> between singleQuotaSpace singleQuotaSpace (sepEndBy1 stringSpaces (try (btwnSpacebs $ char ','))) <* (spacebs *> string "on ")))
       <*> (G.Object <$> stringSpaces)
 
 gotoS :: CharParser () String
@@ -48,7 +50,7 @@ choiceString [] = error "Can't be empty!"
 choiceString elems = choice $ (try . string) <$> elems
 
 stringSpaces :: CharParser () String
-stringSpaces = many1 letter <> (concat <$> many (try (many1 (char ' ') <> many1 letter) ))
+stringSpaces = letters1 <> (concat <$> many (try (spacebs1 <> letters1) ))
 
 singleQuotaSpace :: CharParser () String
-singleQuotaSpace = btwnSpaces $ string "'"
+singleQuotaSpace = btwnSpacebs $ string "'"

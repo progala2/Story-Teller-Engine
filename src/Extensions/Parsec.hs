@@ -7,11 +7,17 @@ import Text.ParserCombinators.Parsec
 manyTill1 :: Stream s m t => ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m [a]
 manyTill1 el end = (:) <$> el <*> manyTill el end
 
-whiteSpaces :: Stream s m Char => ParsecT s u m ()
-whiteSpaces = many (oneOf " \t\f\v")  *> return ()
+spaceb :: CharParser () Char
+spaceb = (oneOf " \t\f\v")
 
-whiteSpacesAndEol :: CharParser () ()
-whiteSpacesAndEol = whiteSpaces *> eol'
+spacebs :: CharParser () String
+spacebs = many spaceb
+
+spacebs' :: CharParser () ()
+spacebs' = spacebs *> return ()
+
+spacebsAndEol' :: CharParser () ()
+spacebsAndEol' = spacebs' *> eol'
 
 eol :: CharParser () String
 eol = try (string "\n\r")
@@ -23,5 +29,11 @@ eol = try (string "\n\r")
 eol' :: CharParser () ()
 eol' = eol >> return ()
 
-btwnSpaces :: CharParser () a -> CharParser () a
-btwnSpaces f = spaces *> f <* spaces
+btwnSpacebs :: CharParser () a -> CharParser () a
+btwnSpacebs f = spacebs *> f <* spacebs
+
+letters1 :: CharParser () String
+letters1 = many1 letter
+
+spacebs1 :: CharParser () String
+spacebs1 = many1 spaceb 

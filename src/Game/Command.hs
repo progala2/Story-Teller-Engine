@@ -56,16 +56,16 @@ handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ interc
 
 handleCommand (PickUpItem it) = do 
   (PlayerStatus currLoc plItems, ws@(go, _)) <- S.get
-  if itemExists it currLoc 
+  if lcItemExists currLoc it 
     then if Set.size plItems /= (goPlayerCapacity go) 
-      then S.put (PlayerStatus (removeItemFromLoc it currLoc) (Set.insert it plItems), ws) >> return "Item taken."
+      then S.put (PlayerStatus (lcRemoveItem it currLoc) (Set.insert it plItems), ws) >> return "Item taken."
       else return $ "You can't have more than " ++ (show $ goPlayerCapacity go) ++ " items."
     else return "There is no such item in this location..."
 
 handleCommand (ThrowItem it) = do
   (PlayerStatus currLoc plIt, ws) <- S.get
   if Set.member it plIt
-    then S.put (PlayerStatus (addItemsToLoc [it] currLoc) (Set.delete it plIt), ws) >> return "Item has been thrown away."
+    then S.put (PlayerStatus (lcAddItems [it] currLoc) (Set.delete it plIt), ws) >> return "Item has been thrown away."
     else return "You don't have that item."
 
 handleCommand ExitGame = S.lift $ Left QuitGame
@@ -97,10 +97,10 @@ hasNotItems items plItems = foldl' (nCorrectItem) (Right ()) items
 applyActionResults :: Monad m => ActionResult -> GameStateM m ()
 applyActionResults (ArAddLocationItems aItms) = do
   (PlayerStatus currLoc plIt, ws) <- S.get
-  S.put (PlayerStatus (addItemsToLoc aItms currLoc) plIt, ws)
+  S.put (PlayerStatus (lcAddItems aItms currLoc) plIt, ws)
 applyActionResults (ArRemoveObjects objs) = do
   (PlayerStatus currLoc plIt, ws) <- S.get
-  S.put (PlayerStatus (removeObjectsFromLoc objs currLoc) plIt, ws)
+  S.put (PlayerStatus (lcRemoveObjects objs currLoc) plIt, ws)
 
 downMb :: a -> S.StateT s Maybe a -> S.StateT s (Either e) a
 downMb f st = S.get >>= (\ oldSt -> S.mapStateT (mapper oldSt) st)

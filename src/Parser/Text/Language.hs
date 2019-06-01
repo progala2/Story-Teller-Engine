@@ -15,10 +15,10 @@ section :: String -> CharParser () a -> CharParser () a
 section name parser = beginToken name *> parser <* endToken
 
 inlineSection :: String -> CharParser () [String]
-inlineSection name = skipOptionName name *> sepBy (quotaString) (char ' ') <* whiteSpacesAndEol
+inlineSection name = skipOptionName name *> sepBy (quotaString) (char ' ') <* spacebsAndEol'
 
 beginToken :: String -> CharParser () ()
-beginToken name = spaces *> string' ("<" ++ name) *> whiteSpacesAndEol
+beginToken name = spaces *> string' ("<" ++ name) *> spacebsAndEol'
 
 tryEndToken :: CharParser () String
 tryEndToken = try endToken
@@ -29,27 +29,27 @@ skipOptionName :: String -> CharParser () ()
 skipOptionName name = do 
     spaces
     string' name
-    whiteSpaces
+    spacebs'
     _ <- char '='
-    whiteSpaces
+    spacebs'
 
 tryReadOption :: String -> CharParser () String
 tryReadOption name = try (readOption name)
 
 readOption :: String -> CharParser () String
-readOption name = skipOptionName name *> quotaString <* whiteSpacesAndEol
+readOption name = skipOptionName name *> quotaString <* spacebsAndEol'
 
 quotaString :: CharParser () String
 quotaString = between (char '"') (char '"') (many (noneOf "\""))
 
 readValueName ::CharParser () String
-readValueName = spaces *> quotaString <* whiteSpacesAndEol
+readValueName = spaces *> quotaString <* spacebsAndEol'
 
 tryOptionInt :: String -> CharParser () Int
 tryOptionInt name = try (readOptionInt name)
 
 readOptionInt :: String -> CharParser () Int
-readOptionInt name = skipOptionName name *> readInt <* whiteSpacesAndEol
+readOptionInt name = skipOptionName name *> readInt <* spacebsAndEol'
 
 readInt :: CharParser () Int
 readInt = read <$> many alphaNum

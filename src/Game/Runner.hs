@@ -8,7 +8,7 @@ import qualified Control.Monad.State.Strict as S
 import           Game.GameState
 import           Data.Foldable (foldlM)
 import           Control.Concurrent (threadDelay)
-import           Data.Functor.Identity (Identity(..))
+import           Extensions.Monad(ifdrM)
 
 runGame :: Bool -> GameStateIO ()
 runGame b = do
@@ -27,8 +27,7 @@ runGame b = do
         putStrLnL "What now? : "
         line <- S.lift $ getLine
         S.lift $ clearScreen
-        b <- S.mapStateT (quitGame gs) (handleCommandE line)
-        if b then return () else gameLoop
+        S.mapStateT (quitGame gs) (handleCommandE line) >>= ifdrM gameLoop
       handleCommandE line = either (\_ -> return "You wrote something wrong!") handleCommand (parseCommand line)
       quitGame _ (Right (a, s)) = putStrLn a >> return (False, s)
       quitGame gs@(_, (go, _)) (Left c) = case c of
@@ -56,6 +55,3 @@ putStrLnLazy :: String -> IO ()
 putStrLnLazy str = hSetBuffering stdout NoBuffering >> foldlM putCharLazy () str >> hSetBuffering stdout LineBuffering >> putStrLn "\n"
   where 
     putCharLazy _ c = putChar c >> threadDelay 40000
-
-liftT :: Monad m => S.StateT s Identity a -> S.StateT s m a
-liftT = S.mapStateT (\(Identity (a, s)) -> return (a, s))

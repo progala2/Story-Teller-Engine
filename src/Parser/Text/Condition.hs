@@ -12,9 +12,9 @@ readCondN :: String -> CharParser () Ge.CondType
 readCondN name = do 
     skipOptionName name
     str <- choice [string "Local", string "Global"] <?> "Wrong condition type."
-    whiteSpaces
+    spacebs'
     i <- readInt
-    whiteSpacesAndEol
+    spacebsAndEol'
     return $ (if str == "Local" then Ge.Local else Ge.Global) i
 
 readCondsSection :: CharParser () Ge.Conditions

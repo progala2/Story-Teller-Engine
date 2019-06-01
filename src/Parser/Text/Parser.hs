@@ -44,4 +44,4 @@ gameBeginToken :: CharParser () ()
 gameBeginToken = 
     spaces 
     *> string' "<Game"
-    <* whiteSpacesAndEol
+    <* spacebsAndEol'
