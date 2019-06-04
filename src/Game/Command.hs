@@ -15,7 +15,7 @@ import qualified Data.List.Ordered as LO
 -- | A data type is used to communicate the result, when exiting the game.
 data ExitCode = 
   -- | A player quits game without saving it.
-  QuitGame |
+  QuitGame | 
   -- | A player quits game with saving it.
   QuitAndSave |
   -- | A player won the game. 
