@@ -185,6 +185,20 @@ type Actions = [Action]
 -- [@ArRemoveObjects@] - After an action objects will be removed from a location.
 data ActionResult = ArAddLocationItems [Item] | ArRemoveObjects [Object] deriving(Show, Read)
 
+-- | Check whether the given action is an 'UniqueAction'.
+isUniqeAction :: String -> Maybe Object -> Action -> Bool 
+isUniqeAction comm obj (ActionUnique aComm aObj _ _) 
+  | elem comm aComm && aObj == obj = True
+  | otherwise = False
+isUniqeAction _ _ _ = False
+
+-- | Check whether the given action is an 'ItemsOnObjectAction'.
+isItemsOnObjectAction :: Set.Set Item -> Object -> Action -> Bool
+isItemsOnObjectAction items obj (ActionUseItemsOnObject aItms aObj _ _) 
+  | Set.difference aItms items == Set.empty && aObj == obj = True
+  | otherwise = False
+isItemsOnObjectAction _ _ _ = False
+
 newtype Item = Item String deriving(Eq, Ord, Show, Read)
 newtype Object = Object String deriving(Eq, Ord, Show, Read)
 

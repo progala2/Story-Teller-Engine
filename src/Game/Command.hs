@@ -1,3 +1,6 @@
+-- |
+-- Module      : Command
+-- Description : Handling Game Commands
 module Game.Command(ExitCode(..), handleCommand) where
 
 import           Game.CommandParser
@@ -9,13 +12,25 @@ import           Game.GameState
 import           Data.List
 import qualified Data.List.Ordered as LO
 
-data ExitCode = QuitGame | QuitAndSave | PlayerWin deriving(Show)
+-- | A data type is used to communicate the result, when exiting the game.
+data ExitCode = 
+  -- | A player quits game without saving it.
+  QuitGame |
+  -- | A player quits game with saving it.
+  QuitAndSave |
+  -- | A player won the game. 
+  PlayerWin deriving(Show)
 
+-- | The core of the game logic. Basing on the received command from the player it manipulates the GameState.
+--
+-- If the game has been finished, regardles of the reason, it will end up in the Left state with 'ExitCode'
+--
+-- Otherwise it will just return a string as a result message after handling a particular command. 
 handleCommand :: Command -> GameStateM (Either ExitCode) String
 handleCommand (Travel dest) = do
-  str <- downMb nothing travelCommand
-  (PlayerStatus (name, _) _, (go, _)) <- S.get
-  if name == goEndingLocation go then S.lift $ Left PlayerWin else return str
+  str <- mapStateTMb nothing travelCommand
+  b <- playerWon
+  if b then S.lift $ Left PlayerWin else return str
   where
     nothing = "There is no " ++ (show dest) ++ "..."
     travelCommand :: GameStateM Maybe String
@@ -28,29 +43,19 @@ handleCommand (Travel dest) = do
         (LocCannotTravel ct cid str) -> checkConditionWithM (ct, cid) (travel (dest, destLoc)) (return str)
 
 handleCommand (ItemsOnObject items obj) = do
-  (PlayerStatus (_, currLoc) plItems, _) <- S.get
+  (PlayerStatus (_, currLoc) plItems) <- getPlayerStatus
   case hasNotItems items plItems of
     Right _ ->
       case hasNotItems [obj] (lcObjects currLoc) of
-        Right _ -> canApply canApplyItemsOnObject currLoc
+        Right _ -> canApply (isItemsOnObjectAction items obj)
         _ -> return "There is no object like that!"
     Left is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
-  where 
-    canApplyItemsOnObject (ActionUseItemsOnObject aItms aObj _ _) 
-      | Set.difference aItms items == Set.empty && aObj == obj = True
-      | otherwise = False
-    canApplyItemsOnObject _ = False
 
 handleCommand (UniqueCommand comm obj) = do
   (PlayerStatus (_, currLoc) _, _) <- S.get
   case hasNotItems (maybeToList obj) (lcObjects currLoc) of
-    Right _ -> canApply canApplyUniqeCommand currLoc
+    Right _ -> canApply (isUniqeAction comm obj)
     _ -> return "There is no object like that!"
-  where 
-    canApplyUniqeCommand(ActionUnique aComm aObj _ _) 
-      | elem comm aComm && aObj == obj = True
-      | otherwise = False
-    canApplyUniqeCommand _ = False
 
 handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ intercalate "\n" (show <$> Set.toList items))
 
@@ -72,18 +77,31 @@ handleCommand ExitGame = S.lift $ Left QuitGame
 
 handleCommand ExitAndSave = S.lift $ Left QuitAndSave
 
-canApply :: Monad m => (Action -> Bool) -> Location -> GameStateM m String
-canApply f currLoc = case find f (lcActions currLoc) of
-  Just act -> 
-    mapM_ applyActionResults (aResults act) >> return (aComment act)
-  _ -> return "I can't do it."
+-- | Check whether a given action is availible and can be done in the current location and state of the game.
+--
+-- The function parameter is a mean to recognize a searching action among the ones located in the current location.
+canApply :: Monad m => (Action -> Bool) -> GameStateM m String
+canApply f = getLocations >>= (\((_, currLoc), _) -> case find f (lcActions currLoc) of
+    Just act -> 
+      mapM_ applyActionResults (aResults act) >> return (aComment act)
+    _ -> return "I can't do it.")
 
+-- | Change the current location of a player to the given one to this function. 
+-- It doesn't check any conditions, just teleport player to the given location.
 travel :: Monad m => LocationP -> GameStateM m String
 travel destLoc = do
   (PlayerStatus currLoc plItems, (go, locs)) <- S.get
   S.put (PlayerStatus destLoc plItems, (go, insert2 currLoc locs))
   return $ "You travel to: " ++ (show $ fst destLoc)
 
+-- | Check whether player won the game by being the ending location.
+playerWon :: Monad m => GameStateM m Bool
+playerWon = S.get >>= (\(PlayerStatus (name, _) _, (go, _)) -> return $ name == goEndingLocation go )
+
+-- | Check whether an array of values is not in the given Set.
+-- 
+-- Returns @Left [a]@ when there are values in the Set and provides those found values.
+-- Otherwise it is just @Right ()@.
 hasNotItems :: (Foldable t, Ord a) => t a -> Set.Set a -> Either [a] ()
 hasNotItems items plItems = foldl' (nCorrectItem) (Right ()) items
   where 
@@ -94,6 +112,7 @@ hasNotItems items plItems = foldl' (nCorrectItem) (Right ()) items
       then Left is
       else Left $ i:is
 
+-- | Applies the given 'ActionResult' without checking any conditions.
 applyActionResults :: Monad m => ActionResult -> GameStateM m ()
 applyActionResults (ArAddLocationItems aItms) = do
   (PlayerStatus currLoc plIt, ws) <- S.get
@@ -102,11 +121,15 @@ applyActionResults (ArRemoveObjects objs) = do
   (PlayerStatus currLoc plIt, ws) <- S.get
   S.put (PlayerStatus (lcRemoveObjects objs currLoc) plIt, ws)
 
-downMb :: a -> S.StateT s Maybe a -> S.StateT s (Either e) a
-downMb f st = S.get >>= (\ oldSt -> S.mapStateT (mapper oldSt) st)
+-- | If the inner monad of the input is 'Nothing' function will convert it to the 'Right' with the default value passed on the first argument.
+-- 
+-- Otherwise it will just rewrite Just to Right. 
+mapStateTMb :: a -> S.StateT s Maybe a -> S.StateT s (Either e) a
+mapStateTMb f st = S.get >>= (\ oldSt -> S.mapStateT (mapper oldSt) st)
   where
     mapper oldSt Nothing = Right (f, oldSt)
     mapper _ (Just (a, s)) = Right (a, s)
 
-insert2 ::Ord a => (a, b) -> M.Map a b -> M.Map a b
-insert2 (a, b) = M.insert a b
+-- | Just a helper for a tuple insert
+insert2 ::Ord k => (k, a) -> M.Map k a -> M.Map k a
+insert2 = uncurry M.insert
