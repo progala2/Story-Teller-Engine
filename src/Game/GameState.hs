@@ -16,12 +16,26 @@ getLocations :: Monad m => GameStateM m (LocationP, LocMap)
 getLocations = do
   (PlayerStatus currLoc _, (_, locations)) <- S.get
   return (currLoc, locations)
+-- | Helper for taking the current location of the player from 'GameStatus'.
+getCurrLocation :: Monad m => GameStateM m Location
+getCurrLocation = do
+  ((_, currLoc), _) <- getLocations
+  return currLoc
 
 -- | Helper for taking only 'PlayerStatus' data from 'GameStatus'.
 getPlayerStatus :: Monad m => GameStateM m PlayerStatus
 getPlayerStatus = do
   (ps, _) <- S.get
   return ps
+
+getCurrLocUniqueActionsNames :: Monad m => GameStateM m [[String]]
+getCurrLocUniqueActionsNames = do 
+  currLoc <- getCurrLocation
+  return $ auCommands <$> (filter isUnique $ lcActions currLoc)
+  where
+    isUnique a = case a of 
+      ActionUnique _ _ _ _ -> True
+      _ -> False
 
 -- | Provide the whole description of the 'Location' the player is in, taking 'Condition's into consideration if necessary.
 -- if 'Condition' for description of the current 'Location' is not met it will not be added to the result.

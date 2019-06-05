@@ -1,13 +1,10 @@
 module Game.Runner where
 
 import           Game.Command
-import           System.Console.ANSI
-import           Game.CommandParser
-import           System.IO
+import           Extensions.Console
+import           Game.CommandHandler
 import qualified Control.Monad.State.Strict as S
 import           Game.GameState
-import           Data.Foldable (foldlM)
-import           Control.Concurrent (threadDelay)
 import           Extensions.Monad(ifdrM)
 
 runGame :: Bool -> GameStateIO ()
@@ -19,7 +16,7 @@ runGame b = do
       introLn go = do
         clearScreen
         putStrLn $ "Welcome to " ++ goGameName go ++ " ver. " ++ goGameVersion go ++ "\n"
-        putStrLnLazy $ goIntro go
+        putStrLnLazy 40 $ goIntro go
       gameLoop = do 
         gs@(PlayerStatus currLoc _, _) <- S.get
         putStrLnL $ "Location: " ++ (show $ fst currLoc)
@@ -29,11 +26,11 @@ runGame b = do
         S.lift $ clearScreen
         S.mapStateT (quitGame gs) (handleCommandE line) >>= ifdrM gameLoop
       handleCommandE line = either (\_ -> return "You wrote something wrong!") handleCommand (parseCommand line)
-      quitGame _ (Right (a, s)) = putStrLn a >> return (False, s)
+      quitGame _ (Right (a, s)) = printMessage a >> putStrLn "" >> return (False, s)
       quitGame gs@(_, (go, _)) (Left c) = case c of
         QuitGame -> quitGameWo
         QuitAndSave -> quitGameSave
-        PlayerWin -> (putStrLnLazy $ goOutro go) >> return (True, gs)
+        PlayerWin -> (putStrLnLazy 40 $ goOutro go) >> return (True, gs)
         where
           quitGameWo = do
             putStrLn "Are you sure you want to quit this game without saving?(y/n)"
@@ -50,8 +47,3 @@ runGame b = do
 
 putStrLnL :: String -> GameStateIO ()
 putStrLnL str = S.lift $ putStrLn str
-
-putStrLnLazy :: String -> IO ()
-putStrLnLazy str = hSetBuffering stdout NoBuffering >> foldlM putCharLazy () str >> hSetBuffering stdout LineBuffering >> putStrLn "\n"
-  where 
-    putCharLazy _ c = putChar c >> threadDelay 40000

@@ -55,7 +55,7 @@ Good luck!"
                 />
                 <Action
                     Type = "Unique"
-                    Commands = "kick"
+                    Commands = "kick" "karate"
                     Used On = "Door"
                     Comment = "Door is solid, your legs are weak... Nothing happens." 
                 />
