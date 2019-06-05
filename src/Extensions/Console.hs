@@ -1,3 +1,6 @@
+-- |
+-- Module: Console
+-- Description: Additional functions for interacting with the console.
 module Extensions.Console(clearScreen, module Extensions.Console) where
 
 import           System.Console.ANSI

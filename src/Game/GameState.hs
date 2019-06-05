@@ -1,3 +1,8 @@
+-- |
+-- Module      : GameState
+-- Description : Game data
+-- 
+-- All the data regarding the game is located here with some basic functions on them.
 module Game.GameState where
 
 import qualified Control.Monad.State.Strict as S
@@ -22,12 +27,16 @@ getCurrLocation :: Monad m => GameStateM m Location
 getCurrLocation = do
   ((_, currLoc), _) <- getLocations
   return currLoc
-
 -- | Helper for taking only 'PlayerStatus' data from 'GameStatus'.
 getPlayerStatus :: Monad m => GameStateM m PlayerStatus
 getPlayerStatus = do
   (ps, _) <- S.get
   return ps
+-- | Helper for taking only 'GameOptions' data from 'GameStatus'.
+getGo :: Monad m => GameStateM m GameOptions
+getGo = do 
+  (_, (go, _)) <- S.get
+  return go
 
 getCurrLocUniqueActionsNames :: Monad m => GameStateM m [[String]]
 getCurrLocUniqueActionsNames = do 
@@ -226,5 +235,6 @@ instance RealShow Object where
 type ItemSet = Set.Set Item
 type ObjectSet = Set.Set Object
 
+-- | Convert '[String]' to an 'ItemSet'. Does not do any checks whether those items exists in a game.
 itemSetFromList :: [String] -> ItemSet
 itemSetFromList = Set.fromList . (Item <$>)

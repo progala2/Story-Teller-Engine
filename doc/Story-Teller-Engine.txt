@@ -7,11 +7,16 @@
 @package Story-Teller-Engine
 @version 0.7.0.0
 
+
 module Extensions.Console
 clearScreen :: IO ()
 
 -- | Clear a console and write the provided string in red color.
 printError :: String -> IO ()
+
+-- | Clear a console and write the provided string in blue color.
+printMessage :: String -> IO ()
+printColored :: Color -> String -> IO ()
 
 -- | Print a message to the console and wait for input from an user. It is
 --   the same as
@@ -25,17 +30,49 @@ askForLine :: String -> IO String
 --   user.
 askMlForLine :: [String] -> IO String
 
+-- | Works as the <a>putStrLn</a> function but text is writen one char per
+--   given miliseconds.
+putStrLnLazy :: Int -> String -> IO ()
+
 module Extensions.Errors
 errCant :: b
 
+
 module Extensions.Monad
+
+-- | Take Just value or throw an error.
 takeJust :: Maybe a -> a
+
+-- | Convert table of Eithers to one Either with table of values.
+--   
+--   The result will be Left if there is at least one Left in the initial
+--   table. String from the Left value will provide all the Lefts values
+--   found during mapping.
 rightsIfAll :: [Either String b] -> Either String [b]
+
+-- | It is the same as writting:
+--   
+--   <pre>
+--    fmap fmap fmap
+--   or
+--    (f <a>$</a>) <a>$</a> g
+--   </pre>
 (<$$>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+
+-- | It is a helper to avoid writing:
+--   
+--   <pre>
+--   &gt;&gt;&gt; f &lt;*&gt; pure a
+--   </pre>
 (<.>) :: Applicative f => f (a -> b) -> a -> f b
 infixl 4 <.>
-liftT :: Monad m => StateT s Identity a -> StateT s m a
+
+-- | Returns <tt>a ()</tt> if <a>True</a>, or <tt>return ()</tt> if
+--   <a>False</a>.
 ifdM :: Monad a => a () -> Bool -> a ()
+
+-- | Returns <tt>a ()</tt> if <a>False</a>, or <tt>return ()</tt> if
+--   <a>True</a>.
 ifdrM :: Monad a => a () -> Bool -> a ()
 
 module Extensions.Parsec
@@ -53,6 +90,17 @@ choiceString :: [String] -> CharParser () String
 stringSpacebs :: CharParser () String
 sQuotasBtwnSpacebs :: CharParser () String
 
+
+-- | It is used to convert data to string that is without unnecessary
+--   constructots names. Only pure strings for user-friendliness.
+module Game.RealShow
+class RealShow a
+rShow :: RealShow a => a -> String
+instance Game.RealShow.RealShow a => Game.RealShow.RealShow [a]
+
+
+-- | All the data regarding the game is located here with some basic
+--   functions on them.
 module Game.GameState
 
 -- | <tt>StateT</tt> <a>IO</a> monad with <a>GameStatus</a>
@@ -65,9 +113,17 @@ type GameStateM m a = StateT GameStatus m a
 --   <a>LocMap</a>) from <a>GameStatus</a>.
 getLocations :: Monad m => GameStateM m (LocationP, LocMap)
 
+-- | Helper for taking the current location of the player from
+--   <a>GameStatus</a>.
+getCurrLocation :: Monad m => GameStateM m Location
+
 -- | Helper for taking only <a>PlayerStatus</a> data from
 --   <a>GameStatus</a>.
 getPlayerStatus :: Monad m => GameStateM m PlayerStatus
+
+-- | Helper for taking only <a>GameOptions</a> data from <a>GameStatus</a>.
+getGo :: Monad m => GameStateM m GameOptions
+getCurrLocUniqueActionsNames :: Monad m => GameStateM m [[String]]
 
 -- | Provide the whole description of the <a>Location</a> the player is in,
 --   taking <a>Condition</a>s into consideration if necessary. if
@@ -256,6 +312,9 @@ newtype Object
 Object :: String -> Object
 type ItemSet = Set Item
 type ObjectSet = Set Object
+
+-- | Convert '[String]' to an <a>ItemSet</a>. Does not do any checks
+--   whether those items exists in a game.
 itemSetFromList :: [String] -> ItemSet
 instance GHC.Read.Read Game.GameState.PlayerStatus
 instance GHC.Show.Show Game.GameState.PlayerStatus
@@ -295,13 +354,16 @@ instance GHC.Read.Read Game.GameState.LocName
 instance GHC.Show.Show Game.GameState.LocName
 instance GHC.Classes.Ord Game.GameState.LocName
 instance GHC.Classes.Eq Game.GameState.LocName
+instance Game.RealShow.RealShow Game.GameState.Object
+instance Game.RealShow.RealShow Game.GameState.Item
+instance Game.RealShow.RealShow Game.GameState.LocName
 
-module Game.CommandParser
+module Game.Command
 
 -- | Parse the given string to a <a>Command</a>.
 --   
---   [] are used to show alternative commands, {} are used to show what a
---   player can write in.
+--   <tt>[]</tt> are used to show alternative commands, <tt>{}</tt> are
+--   used to show what a player can write in.
 --   
 --   <a>Travel</a>:
 --   
@@ -316,6 +378,53 @@ module Game.CommandParser
 --   [use items\ui] '{item},{item2},...' on {object name}
 --   ex. ui <tt>Axe</tt> on New Door
 --   </pre>
+--   
+--   <a>UniqueCommand</a>:
+--   
+--   <pre>
+--   {command} [on// ] {object name}
+--   {command}
+--   ex. paint New Door
+--   ex. super not useful command
+--   </pre>
+--   
+--   <a>CheckBp</a>:
+--   
+--   <pre>
+--   [check bp/<i>check backpack</i>/cbp]
+--   </pre>
+--   
+--   <a>ExitGame</a>:
+--   
+--   <pre>
+--   [:exit//:q]
+--   </pre>
+--   
+--   <a>ExitAndSave</a>:
+--   
+--   <pre>
+--   [:exitSave//:qs]
+--   </pre>
+--   
+--   <a>Help</a>:
+--   
+--   <pre>
+--   [:help//:h]
+--   </pre>
+--   
+--   <a>PickUpItem</a>:
+--   
+--   <pre>
+--   [pick up//pup] {item name}
+--   ex. pup Fantastic Sword
+--   </pre>
+--   
+--   <a>ThrowItem</a>:
+--   
+--   <pre>
+--   [throw item//thri] {item name}
+--   ex. thri Fantastic Sword
+--   </pre>
 parseCommand :: String -> Either ParseError Command
 
 -- | Available commands in a game.
@@ -329,10 +438,10 @@ ThrowItem :: Item -> Command
 ExitGame :: Command
 ExitAndSave :: Command
 Help :: Command
-instance GHC.Show.Show Game.CommandParser.Command
+instance GHC.Show.Show Game.Command.Command
 
 
-module Game.Command
+module Game.CommandHandler
 
 -- | A data type is used to communicate the result, when exiting the game.
 data ExitCode
@@ -346,21 +455,30 @@ QuitAndSave :: ExitCode
 -- | A player won the game.
 PlayerWin :: ExitCode
 
--- | The core of the game logic. Basing on the received command from the
---   player it manipulates the GameState.
+-- | The core of the game logic. Basing on the received <a>Command</a> from
+--   the player it manipulates the GameState.
 --   
 --   If the game has been finished, regardles of the reason, it will end up
---   in the Left state with <a>ExitCode</a>
+--   in the Left state with <a>ExitCode</a>.
 --   
 --   Otherwise it will just return a string as a result message after
 --   handling a particular command.
 handleCommand :: Command -> GameStateM (Either ExitCode) String
-instance GHC.Show.Show Game.Command.ExitCode
+instance GHC.Show.Show Game.CommandHandler.ExitCode
 
+
+-- | Here we can find the game loop logic.
 module Game.Runner
+
+-- | Run the game. If true it will show the game's introduction text. When
+--   false it will go straight to the <a>gameLoop</a>
 runGame :: Bool -> GameStateIO ()
-putStrLnL :: String -> GameStateIO ()
-putStrLnLazy :: String -> IO ()
+
+-- | Game loop handle interactions between the player and the game.
+--   
+--   Provides logic for handling quitting the current game, by handling the
+--   <a>ExitCode</a> from the <tt>handleCommand'</tt>s <a>Left</a> result.
+gameLoop :: GameStateIO ()
 
 module Parser.Errors
 type LoaderError = String
