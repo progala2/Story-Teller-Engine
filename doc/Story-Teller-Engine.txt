@@ -49,6 +49,9 @@ eol' :: CharParser () ()
 btwnSpacebs :: CharParser () a -> CharParser () a
 letters1 :: CharParser () String
 spacebs1 :: CharParser () String
+choiceString :: [String] -> CharParser () String
+stringSpacebs :: CharParser () String
+sQuotasBtwnSpacebs :: CharParser () String
 
 module Game.GameState
 
@@ -294,6 +297,28 @@ instance GHC.Classes.Ord Game.GameState.LocName
 instance GHC.Classes.Eq Game.GameState.LocName
 
 module Game.CommandParser
+
+-- | Parse the given string to a <a>Command</a>.
+--   
+--   [] are used to show alternative commands, {} are used to show what a
+--   player can write in.
+--   
+--   <a>Travel</a>:
+--   
+--   <pre>
+--   [go to\travel to\move to\gt] {locationName}
+--   ex. go to Old House
+--   </pre>
+--   
+--   <a>ItemsOnObject</a>:
+--   
+--   <pre>
+--   [use items\ui] '{item},{item2},...' on {object name}
+--   ex. ui <tt>Axe</tt> on New Door
+--   </pre>
+parseCommand :: String -> Either ParseError Command
+
+-- | Available commands in a game.
 data Command
 Travel :: LocName -> Command
 ItemsOnObject :: Set Item -> Object -> Command
@@ -303,17 +328,7 @@ PickUpItem :: Item -> Command
 ThrowItem :: Item -> Command
 ExitGame :: Command
 ExitAndSave :: Command
-parseCommand :: String -> Either ParseError Command
-command :: CharParser () Command
-gotoS :: CharParser () String
-itemsOnObjectS :: CharParser () String
-checkBpS :: CharParser () String
-pickUpItemS :: CharParser () String
-exitGameS :: CharParser () String
-exitAndSaveS :: CharParser () String
-choiceString :: [String] -> CharParser () String
-stringSpaces :: CharParser () String
-singleQuotaSpace :: CharParser () String
+Help :: Command
 instance GHC.Show.Show Game.CommandParser.Command
 
 

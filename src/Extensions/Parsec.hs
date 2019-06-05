@@ -37,3 +37,13 @@ letters1 = many1 letter
 
 spacebs1 :: CharParser () String
 spacebs1 = many1 spaceb 
+
+choiceString :: [String] -> CharParser () String
+choiceString [] = error "Can't be empty!"
+choiceString elems = choice $ (try . string) <$> elems
+
+stringSpacebs :: CharParser () String
+stringSpacebs = letters1 <> (concat <$> many (try (spacebs1 <> letters1) ))
+
+sQuotasBtwnSpacebs :: CharParser () String
+sQuotasBtwnSpacebs = btwnSpacebs $ string "'"
