@@ -4,6 +4,7 @@ import qualified Control.Monad.State.Strict as S
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import           Data.List
+import           Game.RealShow
 import           Data.Foldable (foldlM)
 
 -- | 'StateT' 'IO' monad with 'GameStatus'
@@ -118,6 +119,8 @@ data Location = Location {
 
 -- | LocName is the key of the 'Location' data
 newtype LocName = LocName String deriving(Eq, Ord, Show, Read)
+instance RealShow LocName where
+  rShow (LocName a) = a 
 type LocationP = (LocName, Location)
 type LocMap = M.Map LocName Location
 type DescMap = (M.Map DescOrder LocDesc)
@@ -214,7 +217,11 @@ isItemsOnObjectAction items obj (ActionUseItemsOnObject aItms aObj _ _)
 isItemsOnObjectAction _ _ _ = False
 
 newtype Item = Item String deriving(Eq, Ord, Show, Read)
+instance RealShow Item where
+  rShow (Item a) = a
 newtype Object = Object String deriving(Eq, Ord, Show, Read)
+instance RealShow Object where
+  rShow (Object a) = a
 
 type ItemSet = Set.Set Item
 type ObjectSet = Set.Set Object

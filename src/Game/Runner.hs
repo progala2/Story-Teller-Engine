@@ -1,6 +1,7 @@
 module Game.Runner where
 
 import           Game.Command
+import           Game.RealShow
 import           Extensions.Console
 import           Game.CommandHandler
 import qualified Control.Monad.State.Strict as S
@@ -19,7 +20,7 @@ runGame b = do
         putStrLnLazy 40 $ goIntro go
       gameLoop = do 
         gs@(PlayerStatus currLoc _, _) <- S.get
-        putStrLnL $ "Location: " ++ (show $ fst currLoc)
+        putStrLnL $ "Location: " ++ (rShow $ fst currLoc)
         showDescription >>= putStrLnL
         putStrLnL "What now? : "
         line <- S.lift $ getLine
@@ -40,7 +41,7 @@ runGame b = do
               "n" -> return (False, gs)
               _ -> quitGameWo
           quitGameSave = do 
-            putStrLn "Give save name:"
+            putStrLn "Give a name of the save:"
             answer <- getLine
             writeFile (answer ++ ".save.ste") (show gs)
             return (True, gs)

@@ -6,6 +6,7 @@ module Game.CommandHandler(ExitCode(..), handleCommand) where
 import           Game.Command
 import qualified Control.Monad.State.Strict as S
 import           Extensions.Monad ((<$$>))
+import           Game.RealShow
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import           Data.Maybe (maybeToList)
@@ -33,7 +34,7 @@ handleCommand (Travel dest) = do
   b <- playerWon
   if b then S.lift $ Left PlayerWin else return str
   where
-    nothing = "There is no " ++ (show dest) ++ "..."
+    nothing = "There is no " ++ (rShow dest) ++ "..."
     travelCommand :: GameStateM Maybe String
     travelCommand = do
       (currLoc, locations) <- getLocations
@@ -50,7 +51,7 @@ handleCommand (ItemsOnObject items obj) = do
       case hasNotItems [obj] (lcObjects currLoc) of
         Right _ -> canApply (isItemsOnObjectAction items obj)
         _ -> return "There is no object like that!"
-    Left is -> return $ "You don't have these items: " ++ (show $ LO.sort is)
+    Left is -> return $ "You don't have these items: " ++ (rShow $ LO.sort is)
 
 handleCommand (UniqueCommand comm obj) = do
   currLoc <- getCurrLocation
@@ -58,7 +59,7 @@ handleCommand (UniqueCommand comm obj) = do
     Right _ -> canApply (isUniqeAction comm obj)
     _ -> return "There is no object like that!"
 
-handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ intercalate "\n" (show <$> Set.toList items))
+handleCommand CheckBp = S.get >>= (\(PlayerStatus _ items, _) -> return $ intercalate "\n" (rShow <$> Set.toList items))
 
 handleCommand (PickUpItem it) = do 
   (PlayerStatus currLoc plItems, ws@(go, _)) <- S.get
@@ -103,7 +104,7 @@ travel :: Monad m => LocationP -> GameStateM m String
 travel destLoc = do
   (PlayerStatus currLoc plItems, (go, locs)) <- S.get
   S.put (PlayerStatus destLoc plItems, (go, insert2 currLoc locs))
-  return $ "You travel to: " ++ (show $ fst destLoc)
+  return $ "You travel to: " ++ (rShow $ fst destLoc)
 
 -- | Check whether player won the game by being the ending location.
 playerWon :: Monad m => GameStateM m Bool
