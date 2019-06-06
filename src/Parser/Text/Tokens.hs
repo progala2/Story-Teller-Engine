@@ -11,7 +11,8 @@ data GameOptionType = GameName | GameVersion | PlayerCapacity
 data GameOption = GameOptionString String | GameOptionInt Int deriving(Show)  
 type GameOptions = M.Map GameOptionType GameOption
 
-data CondType = Local Int | Global Int | None deriving(Show)
+data CondType = Local CondId | Global CondId | None deriving(Show)
+type CondId = Int
 
 data LocDesc = LocDesc CondType String deriving(Show)
 data LocTravel = LocCannotTravel CondType String | LocCanTravel deriving(Show)

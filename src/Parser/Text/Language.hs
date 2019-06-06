@@ -1,7 +1,22 @@
+-- | 
+-- Module: Language
+-- Description: Common patterns parser functions of the game language. 
 module Parser.Text.Language (module Parser.Text.Language, module Extensions.Parsec) where
 
 import Extensions.Parsec
 
+-- | Parse many elements in a section @<SectionName {many parser} \n />@.
+--
+-- ==== __Examples__
+-- 
+-- @
+--  sectionMany "TokenName" (spaces *> string "bb" <* spaces) will parse:
+--  <TokenName
+--      bb bb bb 
+--      bb
+--  />
+-- @
+--
 sectionMany :: String -> CharParser () a -> CharParser () [a]
 sectionMany name parser = beginToken name *> parser `manyTill` tryEndToken
 
@@ -15,7 +30,7 @@ section :: String -> CharParser () a -> CharParser () a
 section name parser = beginToken name *> parser <* endToken
 
 inlineSection :: String -> CharParser () [String]
-inlineSection name = skipOptionName name *> sepBy (quotaString) (char ' ') <* spacebsAndEol'
+inlineSection name = skipOptionName name *> sepBy quotaString spacebs1 <* spacebsAndEol'
 
 beginToken :: String -> CharParser () ()
 beginToken name = spaces *> string' ("<" ++ name) *> spacebsAndEol'
@@ -32,9 +47,6 @@ skipOptionName name = do
     spacebs'
     _ <- char '='
     spacebs'
-
-tryReadOption :: String -> CharParser () String
-tryReadOption name = try (readOption name)
 
 readOption :: String -> CharParser () String
 readOption name = skipOptionName name *> quotaString <* spacebsAndEol'

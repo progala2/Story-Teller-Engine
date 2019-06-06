@@ -1,4 +1,7 @@
-module Parser.Game.Location.Action where
+-- |
+-- Module: Parser.Game.Action
+-- Description: Parsing Action token to Game's Action data.
+module Parser.Game.Action where
 
 import Parser.Errors
 import Data.Either
@@ -6,6 +9,7 @@ import qualified Game.GameState as G
 import qualified Parser.Text.Tokens as T
 import qualified Parser.Text.Option as T
 
+-- | Converts 'T.Action' to 'G.Action'. Performs simple check whether the given token is correct. If isn't 'LoaderError' is returned.
 action :: T.Action -> Either LoaderError G.Action
 action act = case T.sGet act T.AotType of
     Right "ItemsOnObject" -> useItemsOnObject

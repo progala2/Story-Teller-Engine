@@ -34,7 +34,10 @@ askMlForLine :: [String] -> IO String
 --   given miliseconds.
 putStrLnLazy :: Int -> String -> IO ()
 
+
 module Extensions.Errors
+
+-- | Throws an error with "This scenario can't happen." message.
 errCant :: b
 
 
@@ -75,20 +78,54 @@ ifdM :: Monad a => a () -> Bool -> a ()
 --   <a>True</a>.
 ifdrM :: Monad a => a () -> Bool -> a ()
 
+
 module Extensions.Parsec
+
+-- | The same as <a>manyTill</a> but at least one <tt>a</tt> is parsed.
 manyTill1 :: Stream s m t => ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m [a]
+
+-- | Very similar to <a>space</a> but without new lines charactes.
 spaceb :: CharParser () Char
+
+-- | Very similar to <a>spaces</a> but without new lines charactes.
 spacebs :: CharParser () String
+
+-- | The same as <a>spacebs</a> but discards any results.
 spacebs' :: CharParser () ()
-spacebsAndEol' :: CharParser () ()
+
+-- | Read the end of line.
 eol :: CharParser () String
+
+-- | As <a>eol</a> but discards any results.
 eol' :: CharParser () ()
+
+-- | Parse all spacesbs until the end of line that it also read.
+spacebsAndEol' :: CharParser () ()
+
+-- | Parse between spacebs. Spacebs are discarded and only the result of
+--   the given parser is returned.
 btwnSpacebs :: CharParser () a -> CharParser () a
+
+-- | <pre>
+--   &gt;&gt;&gt; 'many1' 'letter'
+--   </pre>
 letters1 :: CharParser () String
+
+-- | <pre>
+--   &gt;&gt;&gt; 'many1' 'spaceb'
+--   </pre>
 spacebs1 :: CharParser () String
+
+-- | Parsing with trying to use one of the given strings. Very similar to
+--   <a>choice</a>.
 choiceString :: [String] -> CharParser () String
+
+-- | Parse a string with spacebs between. End parsing when there is no more
+--   letters after spacebs or the charactes is different than letter.
 stringSpacebs :: CharParser () String
-sQuotasBtwnSpacebs :: CharParser () String
+
+-- | Parse <tt>'</tt> and discards spacebs around it.
+sQuotaBtwnSpacebs :: CharParser () String
 
 
 -- | It is used to convert data to string that is without unnecessary
@@ -358,6 +395,9 @@ instance Game.RealShow.RealShow Game.GameState.Object
 instance Game.RealShow.RealShow Game.GameState.Item
 instance Game.RealShow.RealShow Game.GameState.LocName
 
+
+-- | This module provides Commands data and the mean to parse it from a
+--   string.
 module Game.Command
 
 -- | Parse the given string to a <a>Command</a>.
@@ -483,7 +523,20 @@ gameLoop :: GameStateIO ()
 module Parser.Errors
 type LoaderError = String
 
+
 module Parser.Text.Language
+
+-- | Parse many elements in a section <tt><a>{many parser} n /</a></tt>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--   sectionMany <a>TokenName</a> (spaces *&gt; string "bb" &lt;* spaces) will parse:
+--   &lt;TokenName
+--       bb bb bb 
+--       bb
+--   /&gt;
+--   </pre>
 sectionMany :: String -> CharParser () a -> CharParser () [a]
 sectionManyWithKey :: String -> CharParser () a -> CharParser () key -> CharParser () (key, [a])
 sectionWithKey :: String -> CharParser () a -> CharParser () key -> CharParser () (key, a)
@@ -493,7 +546,6 @@ beginToken :: String -> CharParser () ()
 tryEndToken :: CharParser () String
 endToken :: CharParser () String
 skipOptionName :: String -> CharParser () ()
-tryReadOption :: String -> CharParser () String
 readOption :: String -> CharParser () String
 quotaString :: CharParser () String
 readValueName :: CharParser () String
@@ -536,9 +588,10 @@ GameOptionString :: String -> GameOption
 GameOptionInt :: Int -> GameOption
 type GameOptions = Map GameOptionType GameOption
 data CondType
-Local :: Int -> CondType
-Global :: Int -> CondType
+Local :: CondId -> CondType
+Global :: CondId -> CondType
 None :: CondType
+type CondId = Int
 data LocDesc
 LocDesc :: CondType -> String -> LocDesc
 data LocTravel
@@ -621,15 +674,36 @@ locationsSection :: CharParser () LocMap
 module Parser.Text.Parser
 parseGameFile :: String -> Either ParseError ParsingResult
 
-module Parser.Game.Location.Travel
-travel :: String -> (String, LocTravel) -> Either String (LocName, LocCanTravel)
 
-module Parser.Game.Location.Action
-action :: Action -> Either LoaderError Action
+module Parser.Game.Travel
+
+-- | Converts '(T.LocNameStr, T.LocTravel)' to '(G.LocName,
+--   G.LocCanTravel)'. Get the <a>LocMap</a> tokens and the name of the
+--   location to performs consistency check.
+travel :: LocMap -> LocNameStr -> (LocNameStr, LocTravel) -> Either LoaderError (LocName, LocCanTravel)
+
 
 module Parser.Game.Condition
-condition :: (Int, Condition) -> (CondId, Condition)
+
+-- | Converts '(T.CondId, T.Condition)' to '(G.CondId, G.Condition)'
+condition :: (CondId, Condition) -> (CondId, Condition)
+
+-- | Converts 'T.Conditions ' to <a>Conditions</a>
 conditionsLoader :: Conditions -> Conditions
+
+
+module Parser.Game.Action
+
+-- | Converts <a>Action</a> to <a>Action</a>. Performs simple check whether
+--   the given token is correct. If isn't <a>LoaderError</a> is returned.
+action :: Action -> Either LoaderError Action
+
+
+module Parser.Game.Location
+
+-- | Converts from '(T.LocNameStr, T.Location)' to the '(G.LocName,
+--   G.Location)'. Get the <a>LocMap</a> to perform consistency checks.
+location :: LocMap -> (LocNameStr, Location) -> Either LoaderError (LocName, Location)
 
 module Parser.Loader
 loadGame :: String -> Either LoaderError GameStatus

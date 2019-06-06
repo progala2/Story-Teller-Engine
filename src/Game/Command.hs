@@ -1,3 +1,8 @@
+-- |
+-- Module: Command
+-- Description: Availible commands and parser of them.
+--
+-- This module provides Commands data and the mean to parse it from a string.
 module Game.Command(parseCommand, Command(..)) where
 
 import           Extensions.Parsec
@@ -102,7 +107,7 @@ command = tryEChoice [
     tryEChoice xs = choice (tryE <$> xs)
     tryE f = try (f <* spacebs <* eof)
     itemsOnObject = ItemsOnObject
-      <$> (G.itemSetFromList <$> (itemsOnObjectS *> between sQuotasBtwnSpacebs sQuotasBtwnSpacebs (sepEndBy1 stringSpacebs (try (btwnSpacebs $ char ','))) <* (spacebs *> string "on ")))
+      <$> (G.itemSetFromList <$> (itemsOnObjectS *> between sQuotaBtwnSpacebs sQuotaBtwnSpacebs (sepEndBy1 stringSpacebs (try (btwnSpacebs $ char ','))) <* (spacebs *> string "on ")))
       <*> (G.Object <$> stringSpacebs)
 
 gotoS :: CharParser () String
