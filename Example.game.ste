@@ -26,7 +26,8 @@ Good luck!"
             <Descriptions
                 <Description
                     Order = 0
-                    Text = "This is House description."
+                    Text = "There is the Door on the left leading to the Outside of the Hause.
+In front of you are stairs to the Basement."
                 />
                 <Description 
                     Order = 1 
@@ -74,7 +75,7 @@ Good luck!"
             <Descriptions
                 <Description 
                     Order = 0 
-                    Text = "This is Basement description"
+                    Text = "Basement looks pretty dark..."
                 />
                 <Description 
                     Order = 1 
@@ -113,6 +114,6 @@ Good luck!"
         />
     />
     <Outro
-        Text = "You win!"
+        Text = "You are free!"
     />
 />

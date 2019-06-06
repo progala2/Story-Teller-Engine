@@ -3,10 +3,8 @@
 -- Description : Helpers for Monad usage.
 module Extensions.Monad(module Extensions.Monad, module Control.Monad) where
 
-import qualified Control.Monad.State.Strict as S
 import           Control.Monad
 import           Extensions.Errors
-import           Data.Functor.Identity (Identity(..))
 
 -- | Take Just value or throw an error.
 takeJust :: Maybe a -> a
@@ -34,6 +32,7 @@ rightsIfAll rs = case foldl fldFunc ("", []) rs of
 -- or
 --  (f <$>) <$> g
 -- @
+infixl 4 <$$>
 (<$$>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
 (<$$>) = fmap fmap fmap
 

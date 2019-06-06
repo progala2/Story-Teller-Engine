@@ -1,3 +1,6 @@
+-- | 
+-- Module: Parser.Text.Option
+-- Description: Class helper for getting tokens from maps.
 module Parser.Text.Option where
 
 import Parser.Errors
@@ -5,16 +8,17 @@ import Data.Map.Strict
 import Extensions.Monad
 import Data.Either
 
+-- | Instance need to implement getIntM.
 class OptionInt a where
     getIntM :: a -> Maybe Int
     getInt :: a -> Int
     getInt = takeJust . getIntM
-    
+-- | Instance need to implement getStrM.  
 class OptionStr a where
     getStrM :: a -> Maybe String
     getStr :: a -> String
     getStr = takeJust . getStrM
-
+-- | Instance need to implement getArrStrM.
 class OptionArrStr a where
     getArrStrM :: a -> Maybe [String]
     getArrStr :: a -> [String]
@@ -36,5 +40,6 @@ tGet mp k func = case mp !? k of Just o -> Right $ func o; _ -> errO k
 saGetD :: (Ord k, Show k, OptionArrStr o) => Map k o -> k -> (String -> b) -> [b]
 saGetD mp k func = func <$> (fromRight [] $ saGet mp k)
 
+-- | >>>  Left $ "There is no " ++ (show str) ++ " option."
 errO ::(Show a) => a -> Either LoaderError b
 errO str = Left $ "There is no " ++ (show str) ++ " option."

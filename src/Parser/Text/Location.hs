@@ -1,10 +1,12 @@
 module Parser.Text.Location ( locationsSection ) where
 
-import Text.ParserCombinators.Parsec
+import           Extensions.Parsec
+import           Extensions.Monad ((<$$>))
 import qualified Parser.Text.Tokens as Ge
 import qualified Data.Map.Strict as M
-import Parser.Text.Language
-import Parser.Text.Condition
+import           Parser.Text.Language
+import           Parser.Text.Condition
+import           Data.Tuple(swap)
 
 locationsSection :: CharParser () Ge.LocMap
 locationsSection = M.fromList <$> sectionMany "Locations" (try locationSection)
@@ -23,17 +25,17 @@ locationSection = do
             (Ge.LocCond, Ge.LocCondV <$> readCondsSection)
             ]  <?> "Not acceptable location option."
         readLocTravelList = M.fromList <$> choice [try (sectionMany "Travel Locations" locTravelsParser),
-            ( (`tupple` Ge.LocCanTravel) <$> ) <$> inlineSection "Travel Locations"]
+            (swap . (,) Ge.LocCanTravel) <$$> inlineSection "Travel Locations"]
           where
             locTravelsParser = choice [try (sectionWithKey "Travel" locTravelParser (readOption "Dest")),
-                (`tupple` Ge.LocCanTravel) <$> readValueName]
+                (swap . (,) Ge.LocCanTravel) <$> readValueName]
             locTravelParser = do 
                 condType <- option Ge.None (try (readCondN "Travel Condition")) 
                 text <- readOption "Cannot Travel Comment"
                 return $ Ge.LocCannotTravel condType text
         
         readDescList = M.fromList <$> choice [try (sectionMany "Descriptions" locDescsParser),
-            ((tupple 0).(Ge.LocDesc Ge.None) <$>) <$> inlineSection "Description"]
+            ((,) 0) . (Ge.LocDesc Ge.None) <$$> inlineSection "Description"]
           where
             locDescsParser = sectionWithKey "Description" locDescParser (readOptionInt "Order")
             locDescParser = do 

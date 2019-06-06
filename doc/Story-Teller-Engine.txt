@@ -61,6 +61,7 @@ rightsIfAll :: [Either String b] -> Either String [b]
 --    (f <a>$</a>) <a>$</a> g
 --   </pre>
 (<$$>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+infixl 4 <$$>
 
 -- | It is a helper to avoid writing:
 --   
@@ -526,44 +527,155 @@ type LoaderError = String
 
 module Parser.Text.Language
 
--- | Parse many elements in a section <tt><a>{many parser} n /</a></tt>.
+-- | Parse many elements in a section: <tt>&lt;SectionName \n {many parser}
+--   \n /&gt;</tt>.
 --   
 --   <h4><b>Examples</b></h4>
 --   
 --   <pre>
---   sectionMany <a>TokenName</a> (spaces *&gt; string "bb" &lt;* spaces) will parse:
---   &lt;TokenName
---       bb bb bb 
---       bb
---   /&gt;
+--    sectionMany "TokenName" (spaces *&gt; string "bb" &lt;* spaces) will parse:
+--    &lt;TokenName
+--        bb bb bb 
+--        bb
+--    /&gt;
+--   and returns ["bb", "bb", "bb", "bb"]
 --   </pre>
 sectionMany :: String -> CharParser () a -> CharParser () [a]
+
+-- | Parse many elements in a section with key: <tt>&lt;SectionName n {key
+--   parser} {many parser} /&gt;</tt>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--    sectionManyWithKey "TokenName" (spaces *&gt; string "bb" &lt;* spaces) (string "key=1n") will parse:
+--    &lt;TokenName
+--        key=1
+--        bb bb bb 
+--        bb
+--    /&gt;
+--   and returns ("key=1n", ["bb", "bb", "bb", "bb"])
+--   </pre>
 sectionManyWithKey :: String -> CharParser () a -> CharParser () key -> CharParser () (key, [a])
+
+-- | Parse element in a section with key: <tt>&lt;SectionName n {key
+--   parser} {parser} /&gt;</tt>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--    sectionWithKey "TokenName" (spaces *&gt; string "bb" &lt;* spaces) (string "key=1n") will parse:
+--    &lt;TokenName
+--        key=1
+--        bb
+--    /&gt;
+--   and returns ("key=1n", "bb")
+--   </pre>
 sectionWithKey :: String -> CharParser () a -> CharParser () key -> CharParser () (key, a)
+
+-- | Parse element in a section &lt;SectionName n {parser} /&gt;.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--    section "TokenName" (spaces *&gt; string "bb" &lt;* spaces) will parse:
+--    &lt;TokenName
+--        bb
+--    /&gt;
+--   and returns "bb"
+--   </pre>
 section :: String -> CharParser () a -> CharParser () a
+
+-- | Parse element in an inline section <tt>SectionName \n {parser}
+--   /&gt;</tt>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--    section "TokenName" (spaces *&gt; string "bb" &lt;* spaces) will parse:
+--    &lt;TokenName
+--        bb
+--    /&gt;
+--   and returns "bb"
+--   </pre>
 inlineSection :: String -> CharParser () [String]
+
+-- | Parse a begin token: <tt>&lt;TokenName</tt>, even if surrounded by
+--   spaces. It must end with the end-of-line string. It discards result.
 beginToken :: String -> CharParser () ()
-tryEndToken :: CharParser () String
+
+-- | Parse the end token: <tt>/&gt;</tt>. It discards the spaces before it.
 endToken :: CharParser () String
+
+-- | tryEndToken = <a>try</a> <a>endToken</a>
+tryEndToken :: CharParser () String
+
+-- | Parse an option name and discards results. OptionName = .
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--   skipOptionName "TokenName" will parse:
+--   TokenName    =    
+--   </pre>
 skipOptionName :: String -> CharParser () ()
+
+-- | Parse an option value. OptionName = Value. It must end with the
+--   end-of-line string.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--   readOption "TokenName" will parse:
+--   TokenName    = "Value"
+--   and returns "Value"   
+--   </pre>
 readOption :: String -> CharParser () String
+
+-- | Parse a string between quotas. Quatas in the string are not allowed.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   <pre>
+--   quotaString will parse:
+--   "Value S"
+--   and returns "Value S"   
+--   </pre>
 quotaString :: CharParser () String
+
+-- | The same as with <tt>quataString</tt> but discards preceding spaces
+--   and the stream must end with the eol string.
 readValueName :: CharParser () String
-tryOptionInt :: String -> CharParser () Int
-readOptionInt :: String -> CharParser () Int
+
+-- | Read a number. For non-number returns 0.
 readInt :: CharParser () Int
-string' :: String -> CharParser () ()
-tupple :: a -> b -> (a, b)
+
+-- | the same as with <a>readOption</a> but parses number instead.
+readOptionInt :: String -> CharParser () Int
+tryOptionInt :: String -> CharParser () Int
+
+-- | Try parsing <tt>b</tt> and transform it to <tt>c</tt> and then put it
+--   to tupple <tt>(a, c)</tt>.
 tryToTV :: (b -> c) -> a -> CharParser () b -> CharParser () (a, c)
+
+-- | Try parsing choice of <a>tryToTV</a>s.
 choiceToTV :: [(a, CharParser () c)] -> CharParser () (a, c)
+string' :: String -> CharParser () ()
+
 
 module Parser.Text.Option
+
+-- | Instance need to implement getIntM.
 class OptionInt a
 getIntM :: OptionInt a => a -> Maybe Int
 getInt :: OptionInt a => a -> Int
+
+-- | Instance need to implement getStrM.
 class OptionStr a
 getStrM :: OptionStr a => a -> Maybe String
 getStr :: OptionStr a => a -> String
+
+-- | Instance need to implement getArrStrM.
 class OptionArrStr a
 getArrStrM :: OptionArrStr a => a -> Maybe [String]
 getArrStr :: OptionArrStr a => a -> [String]
@@ -572,6 +684,10 @@ saGet :: (Ord k, Show k, OptionArrStr o) => Map k o -> k -> Either LoaderError [
 iGet :: (Ord k, Show k, OptionInt o) => Map k o -> k -> Either LoaderError Int
 tGet :: (Ord k, Show k) => Map k o -> k -> (o -> b) -> Either LoaderError b
 saGetD :: (Ord k, Show k, OptionArrStr o) => Map k o -> k -> (String -> b) -> [b]
+
+-- | <pre>
+--   &gt;&gt;&gt; Left $ "There is no " ++ (show str) ++ " option."
+--   </pre>
 errO :: Show a => a -> Either LoaderError b
 
 module Parser.Text.Tokens
