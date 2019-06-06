@@ -665,7 +665,7 @@ string' :: String -> CharParser () ()
 
 module Parser.Text.Option
 
--- | Instance need to implement getIntM.
+-- | Class Instance need to implement getIntM.
 class OptionInt a
 getIntM :: OptionInt a => a -> Maybe Int
 getInt :: OptionInt a => a -> Int

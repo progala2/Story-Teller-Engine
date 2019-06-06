@@ -8,7 +8,7 @@ import Data.Map.Strict
 import Extensions.Monad
 import Data.Either
 
--- | Instance need to implement getIntM.
+-- | Class Instance need to implement getIntM.
 class OptionInt a where
     getIntM :: a -> Maybe Int
     getInt :: a -> Int
